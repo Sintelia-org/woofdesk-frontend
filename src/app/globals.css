@@ -1,0 +1,89 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@plugin "daisyui" {
+  themes: pawflow --default;
+}
+
+@plugin "daisyui/theme" {
+  name: "pawflow";
+  default: true;
+  color-scheme: light;
+
+  --color-base-100: #fff7ea;
+  --color-base-200: #f8edde;
+  --color-base-300: #e6d6c5;
+  --color-base-content: #2e1b13;
+  --color-primary: #e98563;
+  --color-primary-content: #2e1b13;
+  --color-secondary: #d2b493;
+  --color-secondary-content: #2e1b13;
+  --color-accent: #a8b6a0;
+  --color-accent-content: #2e1b13;
+  --color-neutral: #2e1b13;
+  --color-neutral-content: #fffefc;
+  --color-info: #6e8d9b;
+  --color-info-content: #fffefc;
+  --color-success: #738a68;
+  --color-success-content: #fffefc;
+  --color-warning: #b47d39;
+  --color-warning-content: #fffefc;
+  --color-error: #b85a47;
+  --color-error-content: #fffefc;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@theme {
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --breakpoint-xxs: 30rem;
+  --breakpoint-xs: 35rem;
+  --breakpoint-3xl: 105rem;
+  --animate-appear: appear 300ms ease-out both;
+
+  @keyframes appear {
+    from {
+      opacity: 0;
+      transform: translateY(0.35rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  * {
+    border-color: color-mix(
+      in oklab,
+      var(--color-base-content) 12%,
+      transparent
+    );
+  }
+
+  html {
+    background: var(--color-base-200);
+  }
+
+  body {
+    min-height: 100vh;
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
