@@ -1,4 +1,4 @@
-# PawFlow
+# woofdesk
 
 Base frontend para un sistema genérico de gestión de turnos de peluquerías caninas. El proyecto toma como referencia la arquitectura de `gargano-wms-frontend` y usa Next.js App Router, TypeScript, pnpm, DaisyUI y componentes shadcn/Radix.
 
@@ -41,7 +41,7 @@ pnpm start        # servidor de producción
 
 ## Tema DaisyUI
 
-El tema `pawflow` usa la paleta diseñada en Pen:
+El tema `woofdesk` usa la paleta diseñada en Pen:
 
 - Primary: `#E98563`
 - Secondary: `#D2B493`

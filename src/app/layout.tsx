@@ -6,8 +6,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "PawFlow",
-    template: "%s | PawFlow",
+    default: "Woofdesk",
+    template: "%s | Woofdesk",
   },
   description: "Sistema de gestión de turnos para peluquerías caninas.",
 };
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" data-theme="pawflow" suppressHydrationWarning>
+    <html lang="es" data-theme="woofdesk" suppressHydrationWarning>
       <body className="antialiased">
         <AppProviders>{children}</AppProviders>
       </body>

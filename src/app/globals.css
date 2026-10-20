@@ -2,11 +2,11 @@
 @import "tw-animate-css";
 
 @plugin "daisyui" {
-  themes: pawflow --default;
+  themes: woofdesk --default;
 }
 
 @plugin "daisyui/theme" {
-  name: "pawflow";
+  name: "woofdesk";
   default: true;
   color-scheme: light;
 
@@ -28,7 +28,7 @@
   --color-success-content: #fffefc;
   --color-warning: #b47d39;
   --color-warning-content: #fffefc;
-  --color-error: #b85a47;
+  --color-error: #e00;
   --color-error-content: #fffefc;
 
   --radius-selector: 0.5rem;
@@ -86,4 +86,27 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+}
+
+.input {
+  @apply border-neutral/20 bg-white font-normal;
+}
+
+.input:hover {
+  @apply border-neutral/20 bg-white;
+}
+
+.input:focus,
+.input:focus-visible,
+.input:focus-within {
+  @apply border-neutral/50 bg-white;
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.input input:focus,
+.input input:focus-visible {
+  outline: none;
+  box-shadow: none;
 }

@@ -8,10 +8,7 @@ export function Input({
 }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={cn(
-        "input input-bordered bg-base-100 focus:border-primary w-full focus:outline-none",
-        className,
-      )}
+      className={cn("input input-bordered w-full", className)}
       {...props}
     />
   );
