@@ -47,9 +47,13 @@ function SheetContent({
   className,
   children,
   side = "right",
+  accessibleTitle = "Panel",
+  accessibleDescription,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
+  accessibleTitle?: string;
+  accessibleDescription?: string;
 }) {
   return (
     <SheetPortal>
@@ -70,13 +74,17 @@ function SheetContent({
         )}
         {...props}
       >
-        <SheetTitle className="sr-only" />
-        <SheetDescription className="sr-only" />
+        <SheetTitle className="sr-only">{accessibleTitle}</SheetTitle>
+        {accessibleDescription ? (
+          <SheetDescription className="sr-only">
+            {accessibleDescription}
+          </SheetDescription>
+        ) : null}
 
         {children}
         <SheetPrimitive.Close className="data-[state=open]:bg-secondary absolute top-4 right-4 cursor-pointer rounded-xs opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
           <XIcon className="size-4.5" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">Cerrar panel</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
