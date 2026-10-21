@@ -9,7 +9,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="data-theme"
-      defaultTheme="pawflow"
+      defaultTheme="woofdesk"
       enableSystem={false}
     >
       <ReactQueryProvider>
