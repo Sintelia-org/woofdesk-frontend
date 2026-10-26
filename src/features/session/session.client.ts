@@ -5,7 +5,8 @@ import { ServerError } from "@/utils/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { redirectToLogin, whoamiSchema } from "./session.common";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { z } from "zod";
 
 export async function getSession() {
   const url = `${env.NEXT_PUBLIC_API_URL}/api/usuario/autenticado`;
@@ -37,6 +38,49 @@ export function useSession() {
 
   return session;
 }
+
+//// session ORG ////
+
+// export async function getSessionWithOrg(
+//   orgHandle: string,
+//   serverCookie?: string,
+// ) {
+//   const url = `${env.NEXT_PUBLIC_API_URL}/api/v1/auth/whoami?org=${orgHandle}`;
+//   const options = serverCookie
+//     ? {
+//         withCredentials: true,
+//         headers: { Cookie: `session=${serverCookie}` },
+//       }
+//     : {
+//         withCredentials: true,
+//       };
+
+//   const rawSession = await axios.get(url, options);
+//   return sessionWithOrgSchema.parse(rawSession.data);
+// }
+
+// export function useSessionWithOrg() {
+//   const router = useRouter();
+
+//   const params = useParams();
+//   const orgHandle = z.string().parse(params["org"]);
+
+//   const session = useQuery<
+//     Awaited<ReturnType<typeof getSessionWithOrg>>,
+//     ServerError
+//   >({
+//     queryKey: ["session", orgHandle],
+//     queryFn: () => getSessionWithOrg(orgHandle),
+//     staleTime: 30 * 1000, // 30 seconds of cache
+//     retry: false,
+//   });
+
+//   if (session.isError && session.error.status === 401) router.push("/login");
+
+//   return session;
+// }
+
+////////////////
 
 export function useLogout() {
   const queryClient = useQueryClient();
