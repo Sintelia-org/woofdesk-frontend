@@ -1,8 +1,8 @@
-# AGENTS_ES.md
+# CLAUDE_ES.md
 
 ## Alcance
 
-Estas instrucciones aplican a todo el repositorio frontend de WoofDesk. Los archivos `AGENTS.md` más específicos reemplazan este archivo dentro de sus directorios.
+Estas instrucciones aplican a todo el repositorio frontend de WoofDesk. Los archivos `CLAUDE.md` más específicos reemplazan este archivo dentro de sus directorios.
 
 Usá este repositorio como fuente de verdad. Antes de crear una solución nueva, revisá la ruta más cercana y una o dos implementaciones similares. Reutilizá componentes, schemas, funciones de requests, query keys, providers, stores, utilidades y convenciones existentes cuando sean apropiados. No conviertas un patrón local ambiguo en una convención para todo el repositorio.
 
@@ -18,7 +18,7 @@ Usá este repositorio como fuente de verdad. Antes de crear una solución nueva,
 
 - `src/app/`: páginas, layouts, metadata, límites de loading/error y route groups de App Router.
   - `(auth)`: rutas de autenticación que no deben renderizar la estructura de la aplicación autenticada.
-  - `(general)`: rutas de la aplicación autenticada. La navegación compartida pertenece al layout de este route group.
+  - `[org]/(general)`: rutas autenticadas de la organización. La navegación compartida pertenece al layout de este route group.
 - `src/components/`: componentes compartidos y de dominio.
 - `src/components/layout/`: componentes reutilizables de layout y estructura de la aplicación.
 - `src/components/shadcn/`: wrappers locales de shadcn/Radix adaptados a DaisyUI.
@@ -52,7 +52,7 @@ Preferí extender un componente, schema, función de request, provider, store o 
 
 ## Navegación y estructura de la aplicación
 
-- Todas las rutas dentro de `src/app/(general)/` heredan la estructura compartida desde el layout de ese route group.
+- Todas las rutas dentro de `src/app/[org]/(general)/` heredan la estructura compartida desde el layout de ese route group.
 - Mantené la configuración de navegación en una sola fuente de verdad; las variantes desktop y mobile deben usar los mismos datos.
 - Usá landmarks semánticos: `<aside>`, `<nav>`, `<main>` y `<header>` cuando corresponda.
 - Usá links reales para navegar y botones reales para acciones. No uses `div` clickeables.
@@ -131,6 +131,9 @@ Preferí extender un componente, schema, función de request, provider, store o 
 - Mantené tokens de diseño y overrides globales de componentes en `src/app/globals.css`; mantené el layout específico de una feature en las clases de su componente.
 - Preferí utilities dentro de componentes antes que nuevos selectores globales.
 - Usá Lucide para iconografía y `cn` desde `@/lib/cn` para componer clases condicionales.
+- Usá `SelectInput` para selectores controlados, `FormSelect` con React Hook Form y `RecordSelect` para relaciones buscables de la API. Conservá el diseño inspirado en Gargano en los estilos compartidos de pickers, sin agregar menús nativos ni variantes por pantalla.
+- Limitá las vistas de grillas al viewport de la aplicación con contenedores flex `min-h-0`. El scroll debe estar en el cuerpo de la tabla, con cabeceras fijas y paginación visible, sin scroll del documento en esas vistas.
+- Usá `NavigationLink` para enlaces internos de la aplicación y conservá los límites de carga compartidos para que la vista anterior no siga visible durante un cambio de ruta pendiente.
 - Respetá el orden de clases Tailwind configurado por Prettier.
 - Conservá un foco de teclado visible. Si reemplazás el tratamiento de foco de una librería, proporcioná una alternativa accesible y clara.
 - Asociá labels con controles, exponé el estado de validación de forma accesible y usá ARIA solo cuando la semántica nativa no sea suficiente.
@@ -159,7 +162,7 @@ Preferí extender un componente, schema, función de request, provider, store o 
 
 - Nunca edites directamente `.next/`, outputs generados, archivos de dependencias dentro de `node_modules/` ni otros artefactos generados.
 - Editá archivos fuente o inputs del generador.
-- Mantené `AGENTS.md` y `AGENTS_ES.md` sincronizados semánticamente al cambiar instrucciones del repositorio.
+- Mantené `CLAUDE.md` y `CLAUDE_ES.md` sincronizados semánticamente al cambiar instrucciones del repositorio.
 - Tratá README y documentación como contexto complementario; verificá el comportamiento real desde el código y la configuración.
 
 ## Skills locales
@@ -169,7 +172,7 @@ Preferí extender un componente, schema, función de request, provider, store o 
 - `vercel-composition-patterns`: usala al diseñar APIs de componentes reutilizables o refactorizar composición.
 - `vercel-react-best-practices`: usala siempre que escribas o revises código React/Next.js.
 
-Leé el `SKILL.md` completo de la skill seleccionada antes de modificar la tarea y seguí sus referencias cuando corresponda.
+Las skills están en `.claude/skills/`. Invocá la skill seleccionada con la herramienta Skill (o leé su `SKILL.md` completo) antes de modificar la tarea y seguí sus referencias cuando corresponda.
 
 ## Antes de implementar
 
@@ -208,3 +211,15 @@ Después de implementar, informá brevemente:
 - problemas pendientes o verificaciones manuales necesarias.
 
 Mantené el cierre conciso y omití explicaciones no relacionadas.
+
+## Vistas de entidades y contratos del backend
+
+- Seguí la estructura de clientes de Gargano: búsqueda, paginación, query tipada de TanStack, columnas explícitas y modales condicionales propios de la vista. Se pueden compartir primitivas visuales; no reemplaces las vistas por un motor de ABM basado en metadatos.
+- Ubicá formularios y mutaciones de cada entidad en `src/components/modals/{entidad}.tsx`. Usá valores iniciales respaldados por schemas, acciones pendientes/deshabilitadas, errores inline e invalidá todas las claves de la organización afectadas después de guardar.
+- Las vistas autenticadas viven en `src/app/[org]/(general)/`. Incluí el ID de la organización autenticada en las query keys y limpiá la caché cuando cambie la autenticación.
+- Verificá métodos de controllers, records de request/response y reglas de servicios antes de agregar una operación. Los catálogos de consulta deben conservarse así; activar no es eliminar. No inventes endpoints, estadísticas ni campos.
+- Leé `docs/backend-integration.md` para consultar endpoints, permisos, contrato CSRF, limitación de la URL de organización, paginación y convenciones de fechas y horarios.
+- Cada vista de entidad necesita título/icono, buscador y acción de alta cuando la API y el rol permitan crear. Usá TableWorking por defecto; se pueden usar cards para catálogos o agenda. Conservá los indicadores de carga funcionales.
+- Las vistas se animan elemento por elemento con las primitivas de `src/components/appear.tsx`: `AppearGroup` como raíz de la vista, `GeneralHeader` y `SearchToolbar` como elementos ya integrados, `AppearItem` para bloques de contenido, y `AppearList` con `AppearArticle` para tarjetas que se montan después de cargar sus datos. Mantené las animaciones por debajo de unos 300 ms; `MotionConfig reducedMotion="user"` en `NavigationViewport` respeta el movimiento reducido. Formularios, menús, modales, paneles y el interior de las tablas siguen siendo inmediatos.
+- Mientras una vista carga, mostrá su skeleton en lugar de un loader genérico. `RouteSkeleton` en `src/components/skeletons.tsx` sirve tanto para el overlay de navegación pendiente como para `loading.tsx`; cuando cambie el layout de una vista, actualizá su entrada ahí. Los estados de carga dentro de la vista usan las piezas de skeleton equivalentes (`TableLoading`, `CardsSkeleton`, `ChartSkeleton`).
+- Usá Recharts para los gráficos. Tomá los colores de los tokens del tema (`--color-chart-*`, `base-*`, `neutral`), nunca valores hex en los componentes, y ofrecé una tabla de datos accesible cuando el gráfico esté oculto para tecnologías de asistencia.

@@ -7,7 +7,17 @@ import { cn } from "@/utils/lib";
 
 const Dropdown = DropdownMenuPrimitive.Root;
 
-const DropdownTrigger = DropdownMenuPrimitive.Trigger;
+function DropdownTrigger({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  return (
+    <DropdownMenuPrimitive.Trigger
+      className={cn("picker-trigger", className)}
+      {...props}
+    />
+  );
+}
 
 const DropdownGroup = DropdownMenuPrimitive.Group;
 
@@ -26,7 +36,7 @@ const DropdownSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "focus:bg-accent data-[state=open]:bg-accent flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "picker-item data-[state=open]:bg-secondary/20 flex items-center gap-2 px-2.5 py-2 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
       !!inset && "pl-8",
       !!className && className,
     )}
@@ -45,7 +55,7 @@ const DropdownSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      "border-base-300 bg-base-100 text-base-content data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-lg",
+      "picker-content z-[70] max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-40 overflow-y-auto rounded-md border p-1 shadow-lg",
       !!className && className,
     )}
     {...props}
@@ -62,7 +72,7 @@ const DropdownContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "border-base-300 bg-base-100 text-base-content z-50 min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-md border p-1 shadow-lg",
+        "picker-content z-[70] max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[max(10rem,var(--radix-dropdown-menu-trigger-width))] overflow-y-auto p-1",
         !!className && className,
       )}
       {...props}
@@ -80,7 +90,7 @@ const DropdownItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "focus:bg-secondary/30 cursor-default rounded-sm px-2 py-1.5 text-sm outline-none",
+      "picker-item flex items-center gap-2 px-2.5 py-2",
       !!className && className,
     )}
     {...props}
@@ -95,13 +105,13 @@ const DropdownCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "focus:bg-secondary/30 relative cursor-default rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none",
+      "picker-item relative py-2 pr-8 pl-2.5",
       !!className && className,
     )}
     checked={checked}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
         <Check className="h-4 w-4" />
       </DropdownMenuPrimitive.ItemIndicator>
@@ -119,12 +129,12 @@ const DropdownRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "focus:bg-secondary/30 relative cursor-default rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none",
+      "picker-item relative py-2 pr-8 pl-2.5",
       !!className && className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
         <Circle className="h-2 w-2 fill-current" />
       </DropdownMenuPrimitive.ItemIndicator>

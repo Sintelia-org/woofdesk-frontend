@@ -1,5 +1,6 @@
 "use client";
 
+import { NavigationProvider } from "@/components/layout/route-navigation";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
@@ -13,7 +14,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       enableSystem={false}
     >
       <ReactQueryProvider>
-        {children}
+        <NavigationProvider>{children}</NavigationProvider>
         <Toaster richColors closeButton position="top-right" />
       </ReactQueryProvider>
     </ThemeProvider>

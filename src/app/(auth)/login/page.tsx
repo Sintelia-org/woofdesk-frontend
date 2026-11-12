@@ -11,16 +11,18 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import Link from "next/link";
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState, useTransition } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ServerError } from "@/lib/types";
-import { env } from "@/env/client.mjs";
-import axios from "axios";
+import { apiClient } from "@/lib/http/client";
+import { RecoveryPasswordModal } from "@/components/modals/auth";
 import { useRouter } from "next/navigation";
 import { ErrorAlert, ErrorLabel } from "@/components/forms";
 import { Button } from "@/components/shadcn/button";
+import { RouteProgressBar } from "@/components/loading";
 import { getErrorMessage } from "@/lib/query";
+import { useSession } from "@/features/session/session.client";
+import { loginResponseSchema } from "@/features/session/session.common";
 
 type Input = z.infer<typeof inputSchema>;
 const inputSchema = z.object({
@@ -31,8 +33,21 @@ const inputSchema = z.object({
 });
 
 export default function LoginPage() {
+  const session = useSession();
+
   const router = useRouter();
+  const queryClient = useQueryClient();
+  // The transition stays pending until the dashboard route commits, which is
+  // what keeps the progress bar visible for the whole redirect.
+  const [isRedirecting, startRedirect] = useTransition();
+  useEffect(() => {
+    if (!session.data) return;
+    const dashboardHref = `/${session.data.orgId}/dashboard`;
+    startRedirect(() => router.replace(dashboardHref));
+  }, [session.data, router]);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isRecoveryPasswordModalOpen, setIsRecoveryPasswordModalOpen] =
+    useState(false);
 
   const {
     register,
@@ -46,17 +61,22 @@ export default function LoginPage() {
     },
   });
 
-  const mutation = useMutation<void, ServerError, Input>({
+  const mutation = useMutation<
+    z.infer<typeof loginResponseSchema>,
+    ServerError,
+    Input
+  >({
     mutationFn: async (data) => {
-      const url = `${env.NEXT_PUBLIC_API_URL}/api/login`;
-
-      await axios.post(url, data, { withCredentials: true });
+      const response = await apiClient.post("/api/auth/login", data);
+      return loginResponseSchema.parse(response.data);
     },
-    onSuccess: () => {
-      router.replace("/dashboard");
-      router.refresh();
+    onSuccess: async (result) => {
+      queryClient.clear();
+      await queryClient.invalidateQueries({ queryKey: ["session"] });
+      startRedirect(() => router.replace(`/${result.user.orgId}/dashboard`));
     },
   });
+  const isSubmitting = mutation.isPending || isRedirecting;
 
   const onSubmit: SubmitHandler<Input> = (data) => mutation.mutate(data);
 
@@ -71,6 +91,9 @@ export default function LoginPage() {
 
   return (
     <section className="flex min-h-screen w-full items-stretch">
+      {isRedirecting ? (
+        <RouteProgressBar label="Redirigiendo al panel" />
+      ) : null}
       <article className="bg-neutral relative hidden min-h-screen w-full max-w-xl flex-col justify-between overflow-hidden p-10 lg:flex">
         <div className="flex items-center gap-3">
           <div className="bg-primary flex items-center justify-center rounded-lg p-2">
@@ -105,7 +128,7 @@ export default function LoginPage() {
       </article>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        aria-busy={mutation.isPending}
+        aria-busy={isSubmitting}
         className="bg-base-100 flex min-h-screen flex-1 flex-col items-center justify-center px-6 py-10 sm:px-10"
       >
         <div className="flex w-full max-w-sm flex-col gap-4">
@@ -182,20 +205,34 @@ export default function LoginPage() {
           />
 
           <div className="flex w-full justify-end">
-            <Link href="#" className="text-primary text-xs hover:underline">
+            <button
+              type="button"
+              onClick={() => setIsRecoveryPasswordModalOpen(true)}
+              className="text-primary cursor-pointer text-xs hover:underline"
+            >
               ¿Olvidaste tu contraseña?
-            </Link>
+            </button>
           </div>
 
           <Button
             type="submit"
-            loading={mutation.isPending}
+            loading={isSubmitting}
             className="w-full text-white"
           >
-            {mutation.isPending ? "Ingresando..." : "Ingresar al sistema"}
+            {isRedirecting
+              ? "Redirigiendo..."
+              : mutation.isPending
+                ? "Ingresando..."
+                : "Ingresar al sistema"}
           </Button>
         </div>
       </form>
+      {isRecoveryPasswordModalOpen ? (
+        <RecoveryPasswordModal
+          isOpen
+          onClose={() => setIsRecoveryPasswordModalOpen(false)}
+        />
+      ) : null}
     </section>
   );
 }

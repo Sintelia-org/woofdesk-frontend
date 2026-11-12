@@ -1,33 +1,24 @@
 import {
   CalendarDaysIcon,
-  ChartNoAxesColumnIcon,
-  ChevronsUpDownIcon,
-  EllipsisIcon,
-  InfoIcon,
   LayoutDashboardIcon,
-  MenuIcon,
-  PackageIcon,
   PawPrintIcon,
   ScissorsIcon,
-  SettingsIcon,
   SparklesIcon,
   UserRoundCogIcon,
   UsersIcon,
-  WalletCardsIcon,
+  UserRoundIcon,
+  ShieldCheckIcon,
+  BookOpenIcon,
+  KeyRoundIcon,
   type LucideIcon,
 } from "lucide-react";
-
 export type NavigationItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  adminOnly?: boolean;
 };
-
-export type NavigationSection = {
-  label: string;
-  items: NavigationItem[];
-};
-
+export type NavigationSection = { label: string; items: NavigationItem[] };
 export const navigationSections: NavigationSection[] = [
   {
     label: "GESTIÓN",
@@ -43,16 +34,26 @@ export const navigationSections: NavigationSection[] = [
     label: "NEGOCIO",
     items: [
       { label: "Servicios", href: "/servicios", icon: SparklesIcon },
-      { label: "Inventario", href: "/inventario", icon: PackageIcon },
-      { label: "Caja", href: "/caja", icon: WalletCardsIcon },
-      { label: "Reportes", href: "/reportes", icon: ChartNoAxesColumnIcon },
+      { label: "Razas", href: "/razas", icon: BookOpenIcon },
     ],
   },
   {
     label: "EQUIPO",
     items: [
-      { label: "Personal", href: "/personal", icon: UserRoundCogIcon },
-      { label: "Configuración", href: "/configuracion", icon: SettingsIcon },
+      {
+        label: "Personal",
+        href: "/personal",
+        icon: UserRoundCogIcon,
+        adminOnly: true,
+      },
+      {
+        label: "Usuarios",
+        href: "/usuarios",
+        icon: UserRoundIcon,
+        adminOnly: true,
+      },
+      { label: "Roles", href: "/roles", icon: ShieldCheckIcon },
+      { label: "Mi cuenta", href: "/cuenta", icon: KeyRoundIcon },
     ],
   },
 ];

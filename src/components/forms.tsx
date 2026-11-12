@@ -1,138 +1,351 @@
-import { cn } from "@/utils/lib";
-import { WithChildren, WithClassName } from "@/utils/types";
+"use client";
+
 import {
   AlertCircleIcon,
+  CheckCircle2Icon,
   CheckIcon,
+  ChevronRightIcon,
+  ClipboardIcon,
   EyeIcon,
   EyeOffIcon,
+  LoaderCircleIcon,
   XIcon,
+  type LucideIcon,
 } from "lucide-react";
 import {
-  Control,
-  FieldPathByValue,
-  FieldValues,
-  useController,
-} from "react-hook-form";
-import {
-  ButtonHTMLAttributes,
-  InputHTMLAttributes,
-  MouseEventHandler,
   useEffect,
   useRef,
   useState,
+  type ButtonHTMLAttributes,
+  type HTMLProps,
+  type InputHTMLAttributes,
+  type MouseEventHandler,
 } from "react";
-import { cva, VariantProps } from "class-variance-authority";
+import {
+  useController,
+  type Control,
+  type FieldPathByValue,
+  type FieldValues,
+} from "react-hook-form";
+
+import { LoadingSpinner } from "@/components/loading";
 import {
   Tooltip,
   TooltipArrow,
   TooltipContent,
   TooltipTrigger,
-} from "./shadcn/tooltip";
-import { LoadingSpinner } from "./loading";
-
-type Color = keyof typeof colours;
-const colours = {
-  error: "text-error",
-  secondary: "text-secondary",
-  primary: "text-primary",
-  warn: "text-warning",
-};
+} from "@/components/shadcn/tooltip";
+import { cn } from "@/lib/cn";
+import type { WithChildren, WithClassName } from "@/lib/types";
 
 export function MandatoryMark({ className }: WithClassName) {
-  return <span className={cn(className, "text-error")}>*</span>;
+  return (
+    <span aria-hidden="true" className={cn("text-error", className)}>
+      *
+    </span>
+  );
 }
 
-export const ErrorLabel = ({
-  message,
-  color = "error",
+const attentionStyles = {
+  error: "text-error",
+  info: "text-info",
+  pending: "text-base-content/60",
+  primary: "text-primary",
+  secondary: "text-secondary",
+  success: "text-success",
+  warning: "text-warning",
+} as const;
+
+type AttentionType = keyof typeof attentionStyles;
+
+export function AttentionLabel({
   className,
+  iconClassName,
+  message,
   showIcon = false,
-}: WithClassName & {
+  type = "error",
+}: {
+  className?: string;
+  iconClassName?: string;
   message?: string;
-  color?: Color;
   showIcon?: boolean;
-}) => {
+  type?: AttentionType;
+}) {
   if (!message) return null;
 
+  const Icon =
+    type === "success"
+      ? CheckCircle2Icon
+      : type === "pending"
+        ? LoaderCircleIcon
+        : AlertCircleIcon;
+
   return (
-    <div className={cn(className, colours[color], "flex items-start gap-1.5")}>
-      {showIcon && <AlertCircleIcon className="mt-0.5 size-4 min-w-4" />}
-      {message}
+    <div
+      className={cn(
+        "flex items-start gap-1.5 text-sm",
+        attentionStyles[type],
+        className,
+      )}
+    >
+      {showIcon ? (
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            "mt-0.5 size-4 min-w-4",
+            type === "pending" && "animate-spin",
+            iconClassName,
+          )}
+        />
+      ) : null}
+      <span>{message}</span>
     </div>
   );
-};
+}
 
-export const ErrorAlert = ({
+type ErrorLabelColor = "error" | "primary" | "secondary" | "warn";
+
+export function ErrorLabel({
+  className,
+  color = "error",
+  message,
+  showIcon = false,
+}: WithClassName & {
+  color?: ErrorLabelColor;
+  message?: string;
+  showIcon?: boolean;
+}) {
+  return (
+    <AttentionLabel
+      className={className}
+      message={message}
+      showIcon={showIcon}
+      type={color === "warn" ? "warning" : color}
+    />
+  );
+}
+
+export function ErrorAlert({
+  className,
   message,
   onClick,
-  className,
 }: {
+  className?: string;
   message?: string;
   onClick?: () => void;
-} & WithClassName) => {
+}) {
   if (!message) return null;
 
   return (
     <div
       className={cn(
+        "border-error/25 bg-error/10 text-error flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-3 py-2",
         className,
-        "alert alert-error flex h-12 max-w-full justify-between gap-4 shadow-lg",
       )}
+      role="alert"
     >
-      <div className="flex w-full max-w-full flex-row items-center gap-2">
-        <AlertCircleIcon className="size-5 min-w-5" />
-        <span className="max-w-full text-sm sm:text-base">
-          {message || "Error desconocido!"}
-        </span>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <AlertCircleIcon aria-hidden="true" className="size-5 min-w-5" />
+        <span className="text-sm">{message}</span>
       </div>
-      {onClick && (
-        <button type="button" onClick={onClick}>
-          <XIcon className="size-5 min-w-5" />
+      {onClick ? (
+        <button
+          aria-label="Cerrar mensaje de error"
+          className="hover:bg-error/10 cursor-pointer rounded-sm p-1"
+          onClick={onClick}
+          type="button"
+        >
+          <XIcon className="size-4" />
         </button>
-      )}
+      ) : null}
     </div>
   );
+}
+
+export function SuccessAlert({
+  className,
+  message,
+  onClick,
+  showCheck = false,
+  showRedirect = false,
+}: {
+  className?: string;
+  message: string;
+  onClick?: () => void;
+  showCheck?: boolean;
+  showRedirect?: boolean;
+}) {
+  return (
+    <div
+      className={cn("flex flex-col items-center gap-4", className)}
+      role="status"
+    >
+      {showCheck ? (
+        <CheckCircle2Icon className="text-success size-20 min-w-20" />
+      ) : null}
+      <div className="text-success flex items-center justify-center gap-2.5 text-center text-balance">
+        <span>{message}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {showRedirect ? (
+          <>
+            <span className="hidden text-xs sm:inline">Redirigiendo…</span>
+            <LoadingSpinner className="size-4" />
+          </>
+        ) : null}
+        {onClick ? (
+          <button
+            aria-label="Cerrar mensaje"
+            className="hover:bg-success/10 cursor-pointer rounded-sm p-1"
+            onClick={onClick}
+            type="button"
+          >
+            <XIcon className="size-4" />
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type Animation = keyof typeof animations;
+const animations = {
+  ball: "loading-ball",
+  bars: "loading-bars",
+  dots: "loading-dots",
+  infinity: "loading-infinity",
+  ring: "loading-ring",
+  spinner: "loading-spinner",
 };
 
-export const SuccessAlert = ({
-  message,
-  showRedirect,
-  showCheck,
-  onClick,
+export function LoadableButton({
+  animation = "spinner",
+  children,
   className,
+  disabled,
+  isPending,
+  onClick,
+  type = "button",
+  ...props
 }: {
-  message: string;
-  showRedirect?: boolean;
-  showCheck?: boolean;
-  onClick?: () => void;
-  className?: string;
-}) => {
+  animation?: Animation;
+  isPending: boolean;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+} & WithChildren &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">) {
   return (
-    <div className={cn(className ?? "", "alert alert-success")}>
-      {showCheck && <CheckIcon className="h-5 w-5" strokeWidth={2} />}
-      <p>{message}</p>
-      {!!onClick && (
-        <XIcon className="h-5 w-5 hover:cursor-pointer" onClick={onClick} />
+    <button
+      {...props}
+      aria-busy={isPending}
+      className={cn("btn", isPending && "cursor-wait", className)}
+      disabled={disabled || isPending}
+      onClick={onClick}
+      type={isPending ? "button" : type}
+    >
+      {isPending ? (
+        <span className={cn("loading size-5", animations[animation])} />
+      ) : (
+        children
       )}
-      {!!showRedirect && (
-        <div className="flex flex-row items-center justify-between gap-3">
-          <p>Redirigiendo...</p>
-          <LoadingSpinner className="h-4 w-4" />
-        </div>
-      )}
+    </button>
+  );
+}
+
+export function CopyButton({
+  className,
+  onCopy,
+  Svg = ClipboardIcon,
+  textToCopy,
+  tooltipText = "Copiar",
+}: {
+  onCopy?: () => void;
+  Svg?: LucideIcon;
+  textToCopy: string;
+  tooltipText?: string;
+} & WithClassName) {
+  const [hasCopied, setHasCopied] = useState(false);
+
+  useEffect(() => {
+    if (!hasCopied) return;
+
+    const timeout = window.setTimeout(() => setHasCopied(false), 1500);
+    return () => window.clearTimeout(timeout);
+  }, [hasCopied]);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setHasCopied(true);
+      onCopy?.();
+    } catch {
+      setHasCopied(false);
+    }
+  };
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        aria-label={hasCopied ? "Copiado" : tooltipText}
+        className={className}
+        disabled={hasCopied}
+        onClick={copy}
+        type="button"
+      >
+        {hasCopied ? <CheckIcon /> : <Svg />}
+      </TooltipTrigger>
+      <TooltipContent
+        className="bg-base-100 border-secondary/50 text-base-content z-50 rounded-md border px-2.5 py-1 text-xs shadow-sm"
+        side="top"
+        sideOffset={5}
+      >
+        <TooltipArrow className="fill-secondary/50" />
+        {hasCopied ? "Copiado" : tooltipText}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+export function IndeterminateCheckbox({
+  className,
+  indeterminate,
+  ...props
+}: { indeterminate?: boolean } & HTMLProps<HTMLInputElement>) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = Boolean(indeterminate && !props.checked);
+    }
+  }, [indeterminate, props.checked]);
+
+  return (
+    <input
+      {...props}
+      className={cn("checkbox checkbox-sm", className)}
+      ref={ref}
+      type="checkbox"
+    />
+  );
+}
+
+export function FormInputSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex animate-pulse flex-col gap-2">
+      <div className="bg-secondary/20 h-4 w-28 rounded-full" />
+      <div className="bg-secondary/20 h-11 w-full rounded-lg" />
     </div>
   );
-};
+}
 
 interface ViewablePasswordControllerProps<
   T extends FieldValues,
   TName extends FieldPathByValue<T, string> = FieldPathByValue<T, string>,
 > {
-  control: Control<T>;
-  name: TName;
-  id?: string;
   className?: string;
+  control: Control<T>;
   disabled?: boolean;
+  id?: string;
+  name: TName;
   placeholder?: string;
 }
 
@@ -140,170 +353,95 @@ export function ViewablePasswordInput<T extends FieldValues>(
   props: ViewablePasswordControllerProps<T>,
 ) {
   const [showPassword, setShowPassword] = useState(false);
-
-  const {
-    field: { value, onChange },
-  } = useController(props);
+  const { field } = useController(props);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <input
-        id={props.id}
-        value={value}
-        onChange={(v) => onChange(v)}
-        type={showPassword ? "text" : "password"}
-        className={props.className}
+        aria-label={props.placeholder ?? "Contraseña"}
+        className={cn("input w-full pr-12", props.className)}
         disabled={props.disabled}
+        id={props.id}
+        onBlur={field.onBlur}
+        onChange={field.onChange}
         placeholder={props.placeholder}
+        ref={field.ref}
+        type={showPassword ? "text" : "password"}
+        value={field.value}
       />
       <Tooltip>
         <TooltipTrigger
+          aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+          className="text-base-content/55 hover:text-base-content absolute inset-y-0 right-3 flex cursor-pointer items-center"
+          onClick={() => setShowPassword((visible) => !visible)}
           type="button"
-          className="absolute top-1/2 right-4 bottom-1/2 flex cursor-pointer flex-row items-center justify-center"
-          onClick={() => setShowPassword((prev) => !prev)}
         >
           {showPassword ? (
-            <EyeIcon className="text-secondary size-5" />
+            <EyeIcon className="size-5" />
           ) : (
-            <EyeOffIcon className="text-secondary size-5" />
+            <EyeOffIcon className="size-5" />
           )}
         </TooltipTrigger>
         <TooltipContent
+          className="bg-base-100 border-secondary/50 text-base-content rounded-md border px-2.5 py-1 text-xs shadow-sm"
           side="top"
-          align="center"
-          sideOffset={10}
-          className="bg-base-100 border-secondary/80 text-primary/80 rounded-sm border px-2.5 py-1 text-xs"
+          sideOffset={8}
         >
-          <TooltipArrow className="fill-secondary/80" />
-          Mostrar contraseña
+          <TooltipArrow className="fill-secondary/50" />
+          {showPassword ? "Ocultar contraseña" : "Ver contraseña"}
         </TooltipContent>
       </Tooltip>
     </div>
   );
 }
 
-// -------------- Loadable Button (copied) -------------- //
-export function LoadingSpinner2({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(!!className && className, "custom-loader h-4 w-4")}
-    ></div>
-  );
-}
+const passwordChecks = [
+  { name: "8 caracteres", regex: /^.{8,}$/ },
+  { name: "Al menos 1 minúscula", regex: /[a-z]/ },
+  { name: "Al menos 1 mayúscula", regex: /[A-Z]/ },
+  { name: "Al menos 1 número", regex: /[0-9]/ },
+] as const;
 
-export const buttonStyles = cva(
-  "rounded-md text-white btn btn-sm min-w-24", // base class
-  {
-    variants: {
-      variant: {
-        default:
-          "hover:bg-slate-100/40 bg-white transition-all border-[.1rem] text-slate-600 border-slate-400 font-medium",
-        tableAdd:
-          "bg-warning hover:bg-warning/80 disabled:bg-warning/60 transition-all",
-        confirm: "bg-success disabled:bg-accent/60 transition-all",
-        danger:
-          "bg-error hover:bg-error/90 disabled:bg-error/60 transition-all",
-      },
-      size: {
-        xs: "h-6 text-xs p-1 flex justify-center items-center",
-        sm: "h-9 px-2 text-xs",
-        lg: "h-9 px-12 text-xs",
-      },
-      defaultVariants: {
-        variant: "default",
-        size: "sm",
-      },
-    },
-  },
-);
-
-interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonStyles> {
-  loading?: boolean;
-  children: React.ReactNode;
-}
-
-export const Button: React.FC<ButtonProps> = ({
+export function PasswordChecker({
   className,
-  variant,
-  size,
-  loading,
-  children,
-  ...props
-}) => {
-  return (
-    <button
-      {...props}
-      className={cn(buttonStyles({ variant, size, className }))}
-    >
-      {loading ? (
-        <span className="flex items-center gap-2">
-          <LoadingSpinner2 />
-          {children}
-        </span>
-      ) : (
-        children
-      )}
-    </button>
-  );
-};
-
-type Animation = keyof typeof animations;
-const animations = {
-  spinner: "loading-spinner",
-  dots: "loading-dots",
-  ring: "loading-ring",
-  ball: "loading-ball",
-  bars: "loading-bars",
-  infinity: "loading-infinity",
-};
-
-export const LoadableButton = ({
-  type,
-  isPending,
-  className,
-  disabled,
-  children,
-  animation = "spinner",
-  onClick,
+  onValidationChange,
+  password,
 }: {
-  type?: "button" | "reset" | "submit";
-  isPending: boolean;
   className?: string;
-  disabled?: boolean;
-  animation?: Animation;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
-} & WithChildren) => {
+  onValidationChange: (isValid: boolean) => void;
+  password: string;
+}) {
+  const isValid = passwordChecks.every((check) => check.regex.test(password));
+
+  useEffect(() => {
+    onValidationChange(isValid);
+  }, [isValid, onValidationChange]);
+
   return (
-    <button
-      onClick={(e) => {
-        if (isPending || !onClick) return;
-        onClick(e);
-      }}
-      type={isPending ? "button" : type}
-      className={cn(
-        "btn",
-        !!className && className,
-        isPending && "no-animation cursor-default",
-      )}
-      disabled={disabled}
-    >
-      {isPending ? (
-        <>
-          <span
+    <div className={cn("flex flex-col gap-1", className)}>
+      {passwordChecks.map((check) => {
+        const passes = check.regex.test(password);
+
+        return (
+          <div
             className={cn(
-              "loading size-5",
-              !!animation && animations[animation],
+              "text-base-content/55 flex items-center gap-1.5 text-xs",
+              passes && "text-success",
             )}
-          />
-        </>
-      ) : (
-        children
-      )}
-    </button>
+            key={check.name}
+          >
+            {passes ? (
+              <CheckIcon className="size-3.5" />
+            ) : (
+              <ChevronRightIcon className="size-3.5" />
+            )}
+            <span>{check.name}</span>
+          </div>
+        );
+      })}
+    </div>
   );
-};
+}
 
 interface SwitchInputControllerProps<
   T extends FieldValues,
@@ -317,86 +455,64 @@ export function SwitchInput<T extends FieldValues>(
   props: SwitchInputControllerProps<T>,
 ) {
   const { field } = useController(props);
-
   const isDisabled = field.value;
 
   return (
     <div
       className={cn(
+        "flex h-12 w-full items-center justify-between rounded-lg border px-3",
         isDisabled
-          ? "border-error/50 bg-error/5"
-          : "border-secondary/10 bg-secondary/5",
-        "flex h-12 w-full flex-col justify-center gap-2 rounded-md border px-3",
+          ? "border-error/40 bg-error/5"
+          : "border-secondary/20 bg-secondary/5",
       )}
     >
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span>Deshabilitado</span>
-          <input
-            type="checkbox"
-            className={cn(
-              isDisabled && "toggle-error",
-              "toggle rounded-md before:rounded-sm",
-            )}
-            checked={isDisabled}
-            readOnly
-            onChange={() => field.onChange(!isDisabled)}
-          />
-        </div>
-      </div>
+      <span>Deshabilitado</span>
+      <input
+        checked={isDisabled}
+        className={cn("toggle rounded-md", isDisabled && "toggle-error")}
+        onChange={() => field.onChange(!isDisabled)}
+        type="checkbox"
+      />
     </div>
   );
 }
 
 export function DebouncedInput({
-  value: initial,
-  debounceTime = 300,
   condition,
+  debounceTime = 300,
   onChange,
+  value: initialValue,
   ...props
 }: {
-  value: string;
-  debounceTime?: number;
   condition?: RegExp;
-  onChange: (v: string) => void;
+  debounceTime?: number;
+  onChange: (value: string) => void;
+  value: string;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value">) {
-  const [value, setValue] = useState(initial);
-
-  const isUserChange = useRef(false);
-
-  useEffect(() => {
-    setValue(initial);
-  }, [initial]);
-
-  const isFirst = useRef(true);
+  const [draft, setDraft] = useState({
+    sourceValue: initialValue,
+    value: initialValue,
+  });
+  const value = draft.sourceValue === initialValue ? draft.value : initialValue;
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (isFirst.current) {
-        isFirst.current = false;
-        return;
-      }
+    if (value === initialValue) return;
 
-      onChange(value);
-      isUserChange.current = false;
-    }, debounceTime);
-
-    return () => clearTimeout(timeout);
-  }, [value, debounceTime, onChange]);
+    const timeout = window.setTimeout(() => onChange(value), debounceTime);
+    return () => window.clearTimeout(timeout);
+  }, [debounceTime, initialValue, onChange, value]);
 
   return (
     <input
-      type="text"
-      value={value}
-      onChange={(e) => {
-        const temp = e.target.value;
-
-        if (!condition || condition.test(temp)) {
-          isUserChange.current = true;
-          setValue(temp);
+      {...props}
+      onChange={(event) => {
+        const nextValue = event.target.value;
+        if (!condition || condition.test(nextValue)) {
+          setDraft({ sourceValue: initialValue, value: nextValue });
         }
       }}
-      {...props}
+      type={props.type ?? "text"}
+      value={value}
     />
   );
 }

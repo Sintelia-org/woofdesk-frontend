@@ -5,7 +5,7 @@ description: Crear o extender catálogos administrativos del sistema de turnos, 
 
 # CRUD de catálogos administrativos
 
-Usá esta skill cuando el usuario pida una vista para listar y administrar una entidad configurable. Respetá `AGENTS.md` y seguí el patrón más cercano del repositorio sin introducir una arquitectura paralela.
+Usá esta skill cuando el usuario pida una vista para listar y administrar una entidad configurable. Respetá `CLAUDE.md` y seguí el patrón más cercano del repositorio sin introducir una arquitectura paralela.
 
 ## Descubrimiento y contrato
 
@@ -25,4 +25,4 @@ Usá esta skill cuando el usuario pida una vista para listar y administrar una e
 
 ## Cierre
 
-Ejecutá las validaciones indicadas por `AGENTS.md`. Informá qué cambió, qué se verificó y qué falta probar contra el backend. Si el contrato no está confirmado, no describas la integración como funcional.
+Ejecutá las validaciones indicadas por `CLAUDE.md`. Informá qué cambió, qué se verificó y qué falta probar contra el backend. Si el contrato no está confirmado, no describas la integración como funcional.

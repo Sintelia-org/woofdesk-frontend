@@ -4,3 +4,8 @@ export type {
   WithChildren,
   WithClassName,
 } from "@/lib/types";
+
+export type ModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};

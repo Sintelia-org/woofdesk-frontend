@@ -1,8 +1,8 @@
-# AGENTS.md
+# CLAUDE.md
 
 ## Scope
 
-These instructions apply to the entire WoofDesk frontend repository. More specific `AGENTS.md` files override this file within their directories.
+These instructions apply to the entire WoofDesk frontend repository. More specific `CLAUDE.md` files override this file within their directories.
 
 Use this repository as the source of truth. Before creating a new solution, inspect the nearest route and one or two similar implementations. Reuse existing components, schemas, request functions, query keys, providers, stores, utilities, and conventions when appropriate. Do not turn an ambiguous local pattern into a repository-wide convention.
 
@@ -18,7 +18,7 @@ Use this repository as the source of truth. Before creating a new solution, insp
 
 - `src/app/`: App Router pages, layouts, metadata, loading/error boundaries, and route groups.
   - `(auth)`: authentication routes that must not render authenticated application chrome.
-  - `(general)`: authenticated application routes. Shared application navigation belongs in this route group's layout.
+  - `[org]/(general)`: authenticated organization routes. Shared application navigation belongs in this route group's layout.
 - `src/components/`: shared and domain UI components.
 - `src/components/layout/`: reusable application-shell and layout components.
 - `src/components/shadcn/`: local shadcn/Radix wrappers adapted to DaisyUI.
@@ -52,7 +52,7 @@ Prefer extending an existing component, schema, request function, provider, stor
 
 ## Navigation and application shell
 
-- All routes inside `src/app/(general)/` inherit the shared application shell from that route group's layout.
+- All routes inside `src/app/[org]/(general)/` inherit the shared application shell from that route group's layout.
 - Keep navigation configuration in one source of truth; desktop and mobile variants must render from the same data.
 - Use semantic landmarks: `<aside>`, `<nav>`, `<main>`, and `<header>` where appropriate.
 - Use real links for navigation and real buttons for actions. Do not use clickable `div` elements.
@@ -131,6 +131,9 @@ Prefer extending an existing component, schema, request function, provider, stor
 - Keep design tokens and global component overrides in `src/app/globals.css`; keep feature-specific layout in component classes.
 - Prefer utility classes in components over new global selectors.
 - Use Lucide for interface iconography and `cn` from `@/lib/cn` for conditional class composition.
+- Use `SelectInput` for controlled selectors, `FormSelect` with React Hook Form, and `RecordSelect` for searchable API-backed relations. Keep their Gargano-inspired design in the shared picker styles instead of adding native select menus or per-screen variants.
+- Keep grid screens bounded by the application viewport with `min-h-0` flex containers. Scroll the table body, preserve sticky column headers and visible pagination, and avoid document scrolling for grid screens.
+- Use `NavigationLink` for internal application links and preserve the shared navigation loading boundaries so the previous screen is not left visible during a pending route change.
 - Follow the configured Prettier Tailwind class ordering.
 - Preserve visible keyboard focus. If a library's default focus treatment is replaced, provide a clear accessible alternative.
 - Associate labels with controls, expose validation state accessibly, and use ARIA only when native semantics are insufficient.
@@ -159,7 +162,7 @@ Prefer extending an existing component, schema, request function, provider, stor
 
 - Never edit `.next/`, generated build output, dependency files inside `node_modules/`, or other generated artifacts directly.
 - Edit source files or generator inputs instead.
-- Keep `AGENTS.md` and `AGENTS_ES.md` semantically synchronized when changing repository instructions.
+- Keep `CLAUDE.md` and `CLAUDE_ES.md` semantically synchronized when changing repository instructions.
 - Treat README and documentation as supporting context; verify runtime behavior from source and configuration.
 
 ## Local skills
@@ -169,7 +172,7 @@ Prefer extending an existing component, schema, request function, provider, stor
 - `vercel-composition-patterns`: use when designing reusable component APIs or refactoring component composition.
 - `vercel-react-best-practices`: use whenever writing or reviewing React/Next.js code.
 
-Read the selected skill's complete `SKILL.md` before making task changes and follow its referenced instructions as required.
+Skills live in `.claude/skills/`. Invoke the selected skill with the Skill tool (or read its complete `SKILL.md`) before making task changes, and follow its referenced instructions as required.
 
 ## Before implementing
 
@@ -208,3 +211,15 @@ After implementation, briefly report:
 - unresolved issues or manual verification still required.
 
 Keep the handoff concise and omit unrelated explanation.
+
+## Entity screens and backend contracts
+
+- Follow Gargano's clients screen structure: page-local search, pagination, typed TanStack query, explicit columns and conditional entity modals. Shared visual primitives are appropriate; do not replace entity pages with a metadata-driven CRUD engine.
+- Put each entity's forms and mutations in `src/components/modals/{entity}.tsx`. Use schema-backed defaults, pending/disabled actions, inline errors and invalidate all affected organization-scoped keys after success.
+- Authenticated tenant screens live in `src/app/[org]/(general)/`. Include the authenticated organization ID in query keys and clear cached data when authentication changes.
+- Verify controller methods, request/response records and service rules before adding an operation. Read-only catalogs must remain read-only; activation is not deletion. Do not invent endpoints, statistics or fields.
+- Read `docs/backend-integration.md` for the current endpoint matrix, permissions, CSRF contract, organization URL limitation, pagination and date/time conventions.
+- Every entity screen needs an icon/title, search and an add action when the API and role allow creation. Use TableWorking by default; cards may replace it for catalogs or agenda content. Retain functional loading indicators.
+- Views animate element by element with the primitives in `src/components/appear.tsx`: `AppearGroup` as the view root, `GeneralHeader` and `SearchToolbar` as built-in items, `AppearItem` for content blocks, and `AppearList` with `AppearArticle` for cards that mount after their data loads. Keep animations under about 300 ms; `MotionConfig reducedMotion="user"` in `NavigationViewport` honors reduced motion. Forms, menus, modals, drawers and table internals stay immediate.
+- While a view loads, show its skeleton instead of a generic loader. `RouteSkeleton` in `src/components/skeletons.tsx` serves both the pending-navigation overlay and `loading.tsx`; when a view's layout changes, update its entry there. In-view pending states use the matching skeleton pieces (`TableLoading`, `CardsSkeleton`, `ChartSkeleton`).
+- Use Recharts for charts. Take colors from theme tokens (`--color-chart-*`, `base-*`, `neutral`), never hex values in components, and provide an accessible data table when the chart is hidden from assistive technology.

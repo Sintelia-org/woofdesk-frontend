@@ -37,7 +37,7 @@ pnpm start        # servidor de producción
 - `src/providers`: providers globales de tema, queries y notificaciones.
 - `src/stores`: estado compartido de interfaz con Zustand.
 - `src/env`: validación Zod de variables de entorno.
-- `.agents/skills`: skills heredadas y adaptadas del repositorio de referencia.
+- `.claude/skills`: skills de Claude Code heredadas y adaptadas del repositorio de referencia.
 
 ## Tema DaisyUI
 

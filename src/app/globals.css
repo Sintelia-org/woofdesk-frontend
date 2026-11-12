@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @plugin "daisyui" {
   themes: woofdesk --default;
@@ -15,7 +14,7 @@
   --color-base-300: #e6d6c5;
   --color-base-content: #2e1b13;
   --color-primary: #e98563;
-  --color-primary-content: #2e1b13;
+  --color-primary-content: #ffffff;
   --color-secondary: #d2b493;
   --color-secondary-content: #2e1b13;
   --color-accent: #a8b6a0;
@@ -43,21 +42,32 @@
 
 @theme {
   --font-sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Geist Mono for labels and figures. A separate token keeps the table's
+     existing font-mono usages unchanged. */
+  --font-mono-ui:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Darker steps for text on primary/info tints and for chart marks: the base
+     primary does not reach the required contrast on base-100. */
+  --color-primary-ink: #9a3f22;
+  --color-info-ink: #3f5a66;
+  --color-chart-bar: #d0663f;
+  --color-chart-scheduled: #c9a77f;
   --breakpoint-xxs: 30rem;
   --breakpoint-xs: 35rem;
   --breakpoint-3xl: 105rem;
-  --animate-appear: appear 300ms ease-out both;
+  /* Eases toward 90% and holds there: the real end of a route change is unknown,
+     so the bar only completes when its owner unmounts. */
+  --animate-route-progress: route-progress 8s cubic-bezier(0.1, 0.7, 0.3, 1)
+    forwards;
 
-  @keyframes appear {
+  @keyframes route-progress {
     from {
-      opacity: 0;
-      transform: translateY(0.35rem);
+      transform: scaleX(0.08);
     }
     to {
-      opacity: 1;
-      transform: translateY(0);
+      transform: scaleX(0.9);
     }
   }
 }
@@ -89,7 +99,7 @@
 }
 
 .input {
-  @apply border-neutral/20 bg-white font-normal;
+  @apply border-neutral/20 rounded-md bg-white font-normal;
 }
 
 .input:hover {
@@ -109,4 +119,110 @@
 .input input:focus-visible {
   outline: none;
   box-shadow: none;
+}
+
+/* Browsers paint their own autofill background (and only behind the inner
+   <input>, not the .input wrapper with its icon). Chromium ignores
+   background-color there, so a large inset shadow repaints the control and
+   the wrapper gets the same opaque primary/10 tint. Each pseudo-class has its
+   own rule because an unsupported one would invalidate a shared list. */
+:root {
+  --input-autofill-background: color-mix(
+    in oklab,
+    var(--color-primary) 10%,
+    white
+  );
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  box-shadow: 0 0 0 1000px var(--input-autofill-background) inset;
+  -webkit-text-fill-color: var(--color-base-content);
+  caret-color: var(--color-base-content);
+}
+
+input:autofill {
+  box-shadow: 0 0 0 1000px var(--input-autofill-background) inset;
+  background-color: var(--input-autofill-background);
+  color: var(--color-base-content);
+  filter: none;
+}
+
+.input:has(input:-webkit-autofill) {
+  background-color: var(--input-autofill-background);
+}
+
+.input:has(input:autofill) {
+  background-color: var(--input-autofill-background);
+}
+
+/* Every button uses the small radius; DaisyUI defaults to --radius-field. */
+.btn:not(.btn-circle) {
+  @apply rounded-sm;
+}
+
+/* DaisyUI animates the checkmark with a delayed transition. Keep toggles immediate. */
+.checkbox,
+.checkbox::before,
+.checkbox::after {
+  transition: none;
+  animation: none;
+}
+
+@layer components {
+  .modal-form :is(input, select, textarea, button)[aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .picker-trigger {
+    @apply border-neutral/20 text-base-content flex h-10 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-md border bg-white px-3 py-2 text-sm font-normal disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .picker-trigger:hover {
+    @apply border-neutral/35;
+  }
+  .picker-trigger:focus-visible {
+    @apply border-neutral/50 outline-none;
+    box-shadow: 0 0 0 1px
+      color-mix(in oklab, var(--color-neutral) 15%, transparent);
+  }
+  .picker-trigger[data-state="open"] {
+    @apply border-neutral/40 rounded-b-none;
+  }
+  .picker-trigger[aria-invalid="true"] {
+    @apply border-error;
+  }
+  .picker-trigger[data-placeholder] {
+    @apply text-base-content/50;
+  }
+  .picker-content {
+    @apply border-secondary/40 text-base-content rounded-md border bg-white p-0 shadow-lg outline-none;
+  }
+  .picker-item {
+    @apply text-base-content/80 cursor-pointer rounded-sm text-sm outline-none select-none disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .picker-item:hover,
+  .picker-item:focus-visible,
+  .picker-item[data-highlighted],
+  .picker-item[data-state="checked"] {
+    @apply bg-secondary/20 text-base-content;
+  }
+  .picker-item[data-disabled] {
+    @apply pointer-events-none opacity-40;
+  }
+  .grid-page > header,
+  .grid-page > .search-toolbar {
+    flex-shrink: 0;
+  }
 }

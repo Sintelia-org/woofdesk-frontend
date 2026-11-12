@@ -1,12 +1,14 @@
-import { cn } from "@/utils/lib";
+"use client";
+
 import * as RadixDialog from "@radix-ui/react-dialog";
 import {
   type ComponentPropsWithoutRef,
   type ElementRef,
-  forwardRef,
+  type Ref,
 } from "react";
 import { XIcon } from "lucide-react";
-import { WithClassName, type WithChildren } from "@/utils/types";
+import { cn } from "@/lib/cn";
+import type { WithChildren, WithClassName } from "@/lib/types";
 
 export type DialogTypes = keyof typeof borderColor;
 const borderColor = {
@@ -22,49 +24,58 @@ const DialogTrigger = RadixDialog.Trigger;
 
 const DialogCloseButton = RadixDialog.Close;
 
-const DialogContent = forwardRef<
-  ElementRef<typeof RadixDialog.Content>,
-  ComponentPropsWithoutRef<typeof RadixDialog.Content> & {
-    showXButton: boolean;
-    type?: "default" | "danger" | "info" | "success" | "warning";
-  }
->(({ children, showXButton, type = "default", className, ...props }, ref) => {
+type DialogContentProps = ComponentPropsWithoutRef<
+  typeof RadixDialog.Content
+> & {
+  contentClassName?: string;
+  locked?: boolean;
+  ref?: Ref<ElementRef<typeof RadixDialog.Content>>;
+  showXButton?: boolean;
+  type?: DialogTypes;
+};
+
+function DialogContent({
+  children,
+  className,
+  contentClassName,
+  locked = false,
+  ref,
+  showXButton = false,
+  type = "default",
+  ...props
+}: DialogContentProps) {
   return (
     <RadixDialog.Portal>
-      <RadixDialog.Overlay className="fixed inset-0 z-30 bg-black/60 focus-visible:outline-none" />
+      <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px] focus-visible:outline-none" />
       <RadixDialog.Content
         ref={ref}
         className={cn(
-          !!className && className,
-          "fixed top-1/2 right-0 left-0 z-30 mx-auto flex w-full max-w-2xl translate-y-[-50%] justify-center px-4 tracking-wide focus:outline-none focus-visible:outline-none",
+          "fixed inset-x-0 top-1/2 z-50 mx-auto flex w-full max-w-2xl -translate-y-1/2 justify-center px-4 tracking-wide focus:outline-none focus-visible:outline-none",
+          className,
         )}
         {...props}
       >
         <div
+          data-slot="dialog-panel"
           className={cn(
             borderColor[type],
-            "bg-base-300 relative container flex flex-col rounded-md border-[1px] p-6 shadow-lg",
+            "bg-base-100 relative flex max-h-[calc(100dvh-2rem)] min-h-0 w-full flex-col overflow-hidden rounded-2xl border shadow-2xl",
+            contentClassName,
           )}
         >
           {children}
 
-          <RadixDialog.Close
-            className={cn(
-              showXButton
-                ? "scale-100 opacity-70 transition-all"
-                : "pointer-events-none scale-150 opacity-0",
-              "text-primary absolute top-4 right-4 cursor-pointer rounded-sm hover:opacity-100",
-            )}
-          >
-            <XIcon className="h-5 w-5" />
-            <span className="sr-only">Close</span>
-          </RadixDialog.Close>
+          {showXButton && !locked ? (
+            <RadixDialog.Close className="text-base-content/55 hover:bg-base-200 hover:text-base-content absolute top-4 right-4 flex size-9 cursor-pointer items-center justify-center rounded-sm">
+              <XIcon className="size-5" />
+              <span className="sr-only">Cerrar</span>
+            </RadixDialog.Close>
+          ) : null}
         </div>
       </RadixDialog.Content>
     </RadixDialog.Portal>
   );
-});
-DialogContent.displayName = RadixDialog.Content.displayName;
+}
 
 const DialogHeader = ({
   children,
@@ -72,9 +83,10 @@ const DialogHeader = ({
 }: WithChildren & WithClassName) => {
   return (
     <div
+      data-slot="dialog-header"
       className={cn(
-        !!className && className,
-        "mb-4 flex flex-col gap-2 text-center sm:text-left",
+        "border-secondary/25 flex shrink-0 flex-col gap-2 px-6 py-5 text-center sm:px-7 sm:text-left",
+        className,
       )}
     >
       {children}
@@ -85,7 +97,7 @@ const DialogHeader = ({
 const DialogTitle = ({ children, className }: WithChildren & WithClassName) => {
   return (
     <RadixDialog.Title
-      className={cn(!!className && className, "text-2xl font-bold")}
+      className={cn("text-base-content pr-8 text-2xl font-bold", className)}
     >
       {children}
     </RadixDialog.Title>
@@ -98,12 +110,24 @@ const DialogDescription = ({
 }: WithChildren & WithClassName) => {
   return (
     <RadixDialog.Description
-      className={cn(!!className && className, "text-base-content/70 text-base")}
+      className={cn("text-base-content/65 text-sm", className)}
     >
       {children}
     </RadixDialog.Description>
   );
 };
+
+const DialogBody = ({ children, className }: WithChildren & WithClassName) => (
+  <div
+    data-slot="dialog-body"
+    className={cn(
+      "min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-6 py-5 sm:px-7",
+      className,
+    )}
+  >
+    {children}
+  </div>
+);
 
 const DialogFooter = ({
   children,
@@ -111,9 +135,10 @@ const DialogFooter = ({
 }: WithChildren & WithClassName) => {
   return (
     <div
+      data-slot="dialog-footer"
       className={cn(
-        !!className && className,
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        "border-secondary/25 w-full shrink-0 border-t px-6 py-4 sm:px-7",
+        className,
       )}
     >
       {children}
@@ -126,6 +151,7 @@ export {
   DialogTrigger,
   DialogContent,
   DialogHeader,
+  DialogBody,
   DialogTitle,
   DialogDescription,
   DialogFooter,
