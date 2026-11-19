@@ -15,6 +15,7 @@ import {
 import { es } from "date-fns/locale";
 import {
   CalendarDaysIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react";
@@ -36,18 +37,43 @@ import { cn } from "@/lib/cn";
 const toDate = (value: string) => new Date(value + "T12:00:00");
 const toValue = (value: Date) => format(value, "yyyy-MM-dd");
 
+// "monthly" is the WoofDesk design (larger days, today ring and an "Ir a hoy"
+// footer); "default" keeps the compact Gargano look used inside forms.
+const calendarVariants = {
+  default: {
+    root: "w-72 max-w-full p-3",
+    nav: "btn btn-ghost btn-sm btn-square shrink-0",
+    period: "picker-trigger h-8 px-2 text-xs",
+    day: "aspect-square rounded-sm text-sm",
+    selected: "bg-primary text-primary-content font-semibold",
+    today: "text-primary ring-primary/40 font-semibold ring-1 ring-inset",
+  },
+  monthly: {
+    root: "w-84 max-w-full p-4",
+    nav: "bg-base-200 hover:bg-secondary/30 rounded-field flex size-9 shrink-0 items-center justify-center disabled:opacity-40",
+    period:
+      "hover:bg-base-200 rounded-field flex h-9 items-center justify-center gap-1 px-2 text-[15px] font-bold",
+    day: "h-10 rounded-field text-sm font-medium",
+    selected: "bg-primary text-neutral font-bold",
+    today: "ring-chart-bar font-semibold ring-[1.5px] ring-inset",
+  },
+} as const;
+
 // Adapted from Gargano's date picker, preserving date-only strings at the API boundary.
 export function DatePicker({
   value,
   onChange,
   min,
   max,
+  variant = "default",
 }: {
   value: string;
   onChange: (value: string) => void;
   min?: string;
   max?: string;
+  variant?: keyof typeof calendarVariants;
 }) {
+  const styles = calendarVariants[variant];
   const [month, setMonth] = useState(() =>
     startOfMonth(value ? toDate(value) : new Date()),
   );
@@ -74,12 +100,12 @@ export function DatePicker({
     Boolean((min && day < min) || (max && day > max));
   const selectedInMonth = days.some((day) => toValue(day) === value);
   return (
-    <div className="w-72 max-w-full p-3">
+    <div className={styles.root}>
       <div className="mb-3 flex items-center gap-1">
         <button
           type="button"
           aria-label="Mes anterior"
-          className="btn btn-ghost btn-sm btn-square shrink-0"
+          className={styles.nav}
           disabled={Boolean(
             min && toValue(endOfMonth(addMonths(month, -1))) < min,
           )}
@@ -91,30 +117,42 @@ export function DatePicker({
           type="button"
           aria-label="Mes"
           aria-expanded={panel === "month"}
-          className="picker-trigger h-8 min-w-0 flex-1 px-2 text-xs capitalize"
+          className={cn(styles.period, "min-w-0 flex-1 capitalize")}
           onClick={() => {
             setPanel(panel === "month" ? null : "month");
             setSearch("");
           }}
         >
           {format(month, "MMMM", { locale: es })}
+          {variant === "monthly" ? (
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="text-base-content/70 size-3.5"
+            />
+          ) : null}
         </button>
         <button
           type="button"
           aria-label="Año"
           aria-expanded={panel === "year"}
-          className="picker-trigger h-8 w-20 shrink-0 px-2 text-xs"
+          className={cn(styles.period, "w-20 shrink-0")}
           onClick={() => {
             setPanel(panel === "year" ? null : "year");
             setSearch("");
           }}
         >
           {month.getFullYear()}
+          {variant === "monthly" ? (
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="text-base-content/70 size-3.5"
+            />
+          ) : null}
         </button>
         <button
           type="button"
           aria-label="Mes siguiente"
-          className="btn btn-ghost btn-sm btn-square shrink-0"
+          className={styles.nav}
           disabled={Boolean(
             max && toValue(startOfMonth(addMonths(month, 1))) > max,
           )}
@@ -223,16 +261,13 @@ export function DatePicker({
                       : -1
                   }
                   className={cn(
-                    "flex aspect-square items-center justify-center rounded-sm text-sm disabled:cursor-not-allowed disabled:opacity-25",
-                    key === value
-                      ? "bg-primary text-primary-content font-semibold"
-                      : "hover:bg-secondary/30",
+                    "flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-25",
+                    styles.day,
+                    key === value ? styles.selected : "hover:bg-secondary/30",
                     !isSameMonth(day, month) &&
                       key !== value &&
                       "text-base-content/35",
-                    key === today &&
-                      key !== value &&
-                      "text-primary ring-primary/40 font-semibold ring-1 ring-inset",
+                    key === today && key !== value && styles.today,
                   )}
                   onClick={() => onChange(key)}
                 >
@@ -243,6 +278,28 @@ export function DatePicker({
           </div>
         </>
       )}
+      {variant === "monthly" ? (
+        <div className="border-base-300 mt-3 flex items-center justify-between gap-3 border-t pt-3">
+          <span className="text-base-content/70 flex items-center gap-2 text-xs">
+            <span
+              aria-hidden="true"
+              className="ring-chart-bar size-3.5 rounded-xs ring-[1.5px] ring-inset"
+            />
+            Hoy, {format(toDate(today), "EEEE d", { locale: es })}
+          </span>
+          <button
+            type="button"
+            className="text-primary-ink hover:bg-base-200 rounded-field h-9 px-3 text-sm font-semibold"
+            onClick={() => {
+              setPanel(null);
+              setMonth(startOfMonth(toDate(today)));
+              onChange(today);
+            }}
+          >
+            Ir a hoy
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -315,6 +372,71 @@ export function DatePickerPopover({
             </button>
           </div>
         ) : null}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/**
+ * Day picker with the date written out ("Jueves 19 de noviembre") and the
+ * monthly calendar. Always has a value: there is no empty state to clear.
+ */
+export function MonthlyDatePicker({
+  value,
+  onChange,
+  className,
+  ...props
+}: Omit<
+  ComponentProps<typeof PopoverTrigger>,
+  "value" | "onChange" | "children" | "defaultValue"
+> & {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const date = toDate(value);
+  const pattern =
+    date.getFullYear() === new Date().getFullYear()
+      ? "EEEE d 'de' MMMM"
+      : "EEEE d 'de' MMMM 'de' yyyy";
+  const label = format(date, pattern, { locale: es });
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        type="button"
+        className={cn(
+          "group bg-base-100 border-base-300 rounded-field data-[state=open]:border-chart-bar data-[state=open]:ring-primary/30 flex h-10 items-center gap-2.5 border px-3 text-sm transition-shadow data-[state=open]:ring-3",
+          className,
+        )}
+        {...props}
+      >
+        <CalendarDaysIcon
+          aria-hidden="true"
+          className="text-primary-ink size-4.5 shrink-0"
+        />
+        <span className="min-w-0 flex-1 truncate text-left first-letter:uppercase">
+          {label}
+        </span>
+        <ChevronDownIcon
+          aria-hidden="true"
+          className="text-base-content/70 size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180"
+        />
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={6}
+        collisionPadding={12}
+        aria-label="Elegir fecha"
+        className="border-base-300 rounded-box z-[70] max-w-[calc(100vw-1.5rem)] border bg-white shadow-xl"
+      >
+        <DatePicker
+          variant="monthly"
+          value={value}
+          onChange={(next) => {
+            onChange(next);
+            setOpen(false);
+          }}
+        />
       </PopoverContent>
     </Popover>
   );

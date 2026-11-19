@@ -2,7 +2,7 @@
 import { AppearGroup, AppearItem } from "@/components/appear";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { PawPrintIcon } from "lucide-react";
+import { CircleCheckBigIcon, CircleXIcon, PawPrintIcon } from "lucide-react";
 import { GeneralHeader } from "@/components/header";
 import {
   SearchToolbar,
@@ -88,7 +88,18 @@ export function PetsPage() {
     {
       label: "Estado",
       key: "active",
-      render: (item) => <StatusBadge active={item.active} />,
+      render: (item) =>
+        item.active ? (
+          <div className="text-success flex items-center gap-1.5">
+            <CircleCheckBigIcon className="size-4 min-w-4" />
+            Activo
+          </div>
+        ) : (
+          <div className="text-error flex items-center gap-1.5">
+            <CircleXIcon className="size-4 min-w-4" />
+            Inactivo
+          </div>
+        ),
       width: "100px",
     },
     {
@@ -147,6 +158,7 @@ export function PetsPage() {
           itemLabel="mascotas"
           addButtonLabel="Agregar mascota"
           searchInput={filter}
+          emptySign="Sin mascotas"
           columns={columns}
           data={petsQuery.data?.content}
           loading={petsQuery.isPending}

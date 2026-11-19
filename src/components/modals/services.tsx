@@ -52,7 +52,7 @@ export function ServiceModal({
       await queryClient.invalidateQueries({
         queryKey: ["appointments", session.data?.orgId],
       });
-      toast.success("Servicio guardado");
+      toast.success(service ? "Cambios guardados" : "Servicio agregado");
       onClose();
     },
   });
@@ -65,6 +65,7 @@ export function ServiceModal({
       footer={
         <FormActions
           form="service-form"
+          label={service ? "Guardar cambios" : "Agregar servicio"}
           pending={mutation.isPending}
           error={mutation.error}
           onClose={onClose}

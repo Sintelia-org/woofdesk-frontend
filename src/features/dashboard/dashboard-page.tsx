@@ -3,7 +3,6 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   addDays,
   addMinutes,
-  addMonths,
   eachDayOfInterval,
   endOfMonth,
   format,
@@ -14,7 +13,6 @@ import { es } from "date-fns/locale";
 import {
   ArrowRightIcon,
   BellIcon,
-  CalendarDaysIcon,
   ClockIcon,
   LayoutDashboardIcon,
   PawPrintIcon,
@@ -31,11 +29,11 @@ import {
   AppearItem,
   AppearList,
 } from "@/components/appear";
-import { ErrorInformer } from "@/components/error";
+import { ErrorState } from "@/components/error";
 import { GeneralHeader } from "@/components/header";
 import { NavigationLink as Link } from "@/components/layout/route-navigation";
 import { CreateAppointmentModal } from "@/components/modals/appointments";
-import { SelectInput } from "@/components/select-input";
+import { MonthlyDatePicker } from "@/components/date";
 import { CardsSkeleton, ChartSkeleton } from "@/components/skeletons";
 import { calendarDay } from "@/features/appointments/calendar";
 import { getAppointments } from "@/features/appointments/requests";
@@ -44,11 +42,11 @@ import { getPet } from "@/features/pets/requests";
 import { useSession } from "@/features/session/session.client";
 import { localDate } from "@/features/shared/format";
 import { cn } from "@/lib/cn";
-import { getErrorMessage } from "@/lib/query";
 import type { ServerError } from "@/lib/types";
 import type { DailyIncome } from "./daily-income-chart";
 import { dashboardExampleData } from "./example-data";
 import { capitalize, wholeMoney } from "./format";
+import { RollingNumber } from "./rolling-number";
 
 // Recharts is only needed by this chart; load it in its own chunk.
 const DailyIncomeChart = dynamic(
@@ -70,22 +68,6 @@ const metricTones = {
   info: "bg-info/15 text-info",
 } as const;
 
-function monthOptions(today: Date) {
-  return Array.from({ length: 14 }, (_, index) => {
-    const month = addMonths(startOfMonth(today), 2 - index);
-    return {
-      value: format(month, "yyyy-MM"),
-      label: capitalize(format(month, "LLLL yyyy", { locale: es })),
-      icon: (
-        <CalendarDaysIcon
-          aria-hidden="true"
-          className="text-base-content/70 size-4 shrink-0"
-        />
-      ),
-    };
-  });
-}
-
 function MetricCard({
   label,
   value,
@@ -104,7 +86,7 @@ function MetricCard({
   return (
     <AppearArticle className="bg-base-100 border-base-300 rounded-box flex flex-col gap-3 border p-4.5">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-base-content/70 text-[13px]">{label}</p>
+        <p className="text-base-content/70 text-sm font-medium">{label}</p>
         <span
           className={cn(
             "rounded-field flex size-9 shrink-0 items-center justify-center",
@@ -121,7 +103,9 @@ function MetricCard({
         </>
       ) : (
         <>
-          <p className="text-3xl font-bold tracking-tight">{value}</p>
+          <p className="text-3xl font-bold tracking-tight">
+            <RollingNumber value={value} />
+          </p>
           <p className="text-base-content/70 [&_strong]:text-base-content text-xs">
             {detail}
           </p>
@@ -149,9 +133,9 @@ function UpcomingAppointmentCard({
   const isTomorrow = isSameDay(start, addDays(now, 1));
   const shortDay = format(start, "EEE d MMM", { locale: es });
   const dayLabel = isToday
-    ? `Hoy · ${shortDay}`
+    ? `Hoy, ${shortDay}`
     : isTomorrow
-      ? `Mañana · ${shortDay}`
+      ? `Mañana, ${shortDay}`
       : capitalize(shortDay);
 
   return (
@@ -174,10 +158,8 @@ function UpcomingAppointmentCard({
 
       <div className="bg-base-200 rounded-field flex items-center justify-between gap-2.5 px-3 py-2.5">
         <div>
-          <p className="font-mono-ui text-base-content/70 text-[10px] tracking-wider">
-            ENTRADA
-          </p>
-          <p className="font-mono-ui mt-0.5 text-xl font-semibold">
+          <p className="text-base-content/70 text-xs">Entrada</p>
+          <p className="mt-0.5 text-xl font-semibold tabular-nums">
             {format(start, "HH:mm")}
           </p>
         </div>
@@ -186,10 +168,8 @@ function UpcomingAppointmentCard({
           className="text-base-content/50 size-4 shrink-0"
         />
         <div className="text-right">
-          <p className="font-mono-ui text-base-content/70 text-[10px] tracking-wider">
-            SALIDA
-          </p>
-          <p className="font-mono-ui mt-0.5 text-xl font-semibold">
+          <p className="text-base-content/70 text-xs">Salida</p>
+          <p className="mt-0.5 text-xl font-semibold tabular-nums">
             {format(end, "HH:mm")}
           </p>
         </div>
@@ -202,16 +182,14 @@ function UpcomingAppointmentCard({
         <div className="min-w-0">
           <p className="truncate text-base font-bold">{appointment.petName}</p>
           <p className="text-base-content/70 mt-0.5 truncate text-xs">
-            {breed ? `${breed} · ` : ""}
+            {breed ? `${breed}, de ` : ""}
             {appointment.clientName}
           </p>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="font-mono-ui text-base-content/70 text-[10px] tracking-wider">
-          SERVICIOS
-        </p>
+        <p className="text-base-content/70 text-xs">Servicios</p>
         <ul className="flex flex-wrap gap-1.5">
           {appointment.services.map((service) => (
             <li
@@ -227,7 +205,7 @@ function UpcomingAppointmentCard({
       <div className="border-base-300 mt-auto flex flex-col gap-3 border-t pt-3.5">
         <div className="flex items-baseline justify-between">
           <span className="text-base-content/70 text-xs">Precio</span>
-          <span className="font-mono-ui text-xl font-bold">
+          <span className="text-xl font-bold tabular-nums">
             {wholeMoney(appointment.netPrice)}
           </span>
         </div>
@@ -255,7 +233,10 @@ export function DashboardPage() {
     session.data?.role === "ADMIN" || session.data?.role === "RECEPTIONIST";
   const now = new Date();
   const today = localDate(now);
-  const [month, setMonth] = useState(() => today.slice(0, 7));
+  // The picked day sets the month of every total and the day shown in the
+  // chart; clicking a bar picks that day back.
+  const [selectedDate, setSelectedDate] = useState(today);
+  const month = selectedDate.slice(0, 7);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const monthStart = new Date(month + "-01T12:00:00");
@@ -355,10 +336,10 @@ export function DashboardPage() {
       isToday: date === today,
     };
   });
-  const todayIndex = daily.findIndex((item) => item.isToday);
-  const lastIncomeIndex = daily.findLastIndex((item) => item.income > 0);
-  const defaultIndex =
-    todayIndex >= 0 ? todayIndex : Math.max(lastIncomeIndex, 0);
+  const selectedIndex = Math.max(
+    daily.findIndex((item) => item.date === selectedDate),
+    0,
+  );
   const monthLabel = capitalize(
     format(monthStart, "LLLL yyyy", { locale: es }),
   );
@@ -374,13 +355,10 @@ export function DashboardPage() {
           format(now, "EEEE d 'de' MMMM 'de' yyyy", { locale: es }),
         )}
         actions={
-          <SelectInput
-            aria-label="Mes del resumen"
-            entityName="meses"
-            className="w-48"
-            value={month}
-            onValueChange={setMonth}
-            options={monthOptions(now)}
+          <MonthlyDatePicker
+            className="w-64"
+            value={selectedDate}
+            onChange={setSelectedDate}
           />
         }
         button={
@@ -395,9 +373,9 @@ export function DashboardPage() {
         className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
       >
         {monthQuery.isError ? (
-          <ErrorInformer
+          <ErrorState
             className="sm:col-span-2 xl:col-span-4"
-            message={getErrorMessage(monthQuery.error)}
+            error={monthQuery.error}
             retry={() => {
               void monthQuery.refetch();
             }}
@@ -409,7 +387,7 @@ export function DashboardPage() {
               value={String(completed.length)}
               detail={
                 <>
-                  completados · <strong>{scheduledCount}</strong> programados
+                  completados y <strong>{scheduledCount}</strong> programados
                 </>
               }
               Icon={ScissorsIcon}
@@ -471,10 +449,9 @@ export function DashboardPage() {
           </div>
           <Link
             href={`/${orgId}/agenda`}
-            className="text-primary-ink flex items-center gap-1.5 text-[13px] font-semibold hover:underline"
+            className="text-primary-ink text-[13px] font-semibold hover:underline"
           >
             Ver agenda
-            <ArrowRightIcon aria-hidden="true" className="size-3.5" />
           </Link>
         </AppearItem>
         {upcomingQuery.isPending ? (
@@ -483,8 +460,8 @@ export function DashboardPage() {
             className="sm:grid-cols-2 xl:grid-cols-4"
           />
         ) : upcomingQuery.isError ? (
-          <ErrorInformer
-            message={getErrorMessage(upcomingQuery.error)}
+          <ErrorState
+            error={upcomingQuery.error}
             retry={() => {
               void upcomingQuery.refetch();
             }}
@@ -517,7 +494,8 @@ export function DashboardPage() {
             key={month}
             data={daily}
             monthLabel={monthLabel}
-            defaultIndex={defaultIndex}
+            selectedIndex={selectedIndex}
+            onSelect={(index) => setSelectedDate(daily[index].date)}
           />
         ) : null}
       </AppearItem>

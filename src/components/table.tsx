@@ -22,18 +22,15 @@ import {
   ArrowUpDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CircleAlertIcon,
-  GlobeLockIcon,
   PlusIcon,
-  SearchXIcon,
-  Table2Icon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { ErrorState } from "@/components/error";
+import { HangingSign } from "@/components/hanging-sign";
 
 import { Button } from "@/components/shadcn/button";
 import { SelectInput } from "@/components/select-input";
 import { cn } from "@/lib/cn";
-import { getErrorMessage } from "@/lib/query";
 import type { ServerError } from "@/lib/types";
 
 export const dataPerPage = [5, 10, 15, 20] as const;
@@ -73,6 +70,8 @@ type TableWorkingProps<T extends TableNode> = {
   error: ServerError | null;
   searchInput?: string;
   emptyText?: string;
+  /** Short label on the hanging sign shown when there are no records. */
+  emptySign?: string;
   itemLabel?: string;
   addButtonLabel?: string;
   columns: TableColumn<T>[];
@@ -226,6 +225,7 @@ function TableWorking<T extends TableNode>({
   error,
   searchInput = "",
   emptyText = "No hay datos cargados todavía",
+  emptySign = "Sin registros",
   itemLabel = "registros",
   addButtonLabel = "Agregar",
   columns,
@@ -322,7 +322,7 @@ function TableWorking<T extends TableNode>({
       `,
       Row: `
         min-height: 56px;
-        --table-row-background: var(--color-base-100);
+        --table-row-background: #FAFAFA;
         background-color: var(--table-row-background);
 
         &:nth-of-type(even) {
@@ -335,11 +335,10 @@ function TableWorking<T extends TableNode>({
         }
       `,
       Cell: `
-        min-height: 56px;
+        min-height: 50px;
         padding: 0 14px;
         background-color: var(--table-row-background, var(--color-base-100));
         border-bottom: 1px solid var(--color-base-300);
-        color: var(--color-base-content);
 
        
 
@@ -393,7 +392,13 @@ function TableWorking<T extends TableNode>({
   );
 
   if (loading) return <TableLoading />;
-  if (error) return <TableError error={error} />;
+  if (error)
+    return (
+      <ErrorState
+        error={error}
+        className="h-full min-h-0 w-full justify-center overflow-y-auto"
+      />
+    );
 
   if (
     !data?.length &&
@@ -422,12 +427,8 @@ function TableWorking<T extends TableNode>({
 
     return (
       <div className="border-base-300 bg-base-100 flex h-full min-h-0 w-full flex-col items-center justify-center gap-4 rounded-2xl border p-8 text-center">
-        {hasSearch ? (
-          <SearchXIcon className="text-secondary size-14" aria-hidden="true" />
-        ) : (
-          <Table2Icon className="text-secondary size-14" aria-hidden="true" />
-        )}
-        <p className="text-base-content/60 text-sm">
+        <HangingSign label={hasSearch ? "Sin resultados" : emptySign} />
+        <p className="text-base-content/70 mt-2 text-sm">
           {hasSearch ? (
             <>
               No hay resultados para <strong>{searchInput}</strong>
@@ -504,11 +505,14 @@ function TableWorking<T extends TableNode>({
 
               <Body>
                 {tableList.map((item) => (
-                  <Row key={item.id} item={item}>
+                  <Row className="odd:bg-white!" key={item.id} item={item}>
                     {columns.map((column) => (
                       <Cell
                         key={`${item.id}-${column.key}`}
-                        className={cn("relative", column.className)}
+                        className={cn(
+                          "text-base-content/80 relative font-medium",
+                          column.className,
+                        )}
                       >
                         {column.render
                           ? column.render(item)
@@ -549,23 +553,6 @@ export function TableLoading() {
           <div className="bg-secondary/15 h-3 w-20 rounded-full" />
         </div>
       ))}
-    </div>
-  );
-}
-
-function TableError({ error }: { error: ServerError }) {
-  const isConnectionError =
-    error.code === "ERR_NETWORK" || error.code === "connection-error";
-  const Icon = isConnectionError ? GlobeLockIcon : CircleAlertIcon;
-
-  return (
-    <div className="border-error/20 bg-error/5 text-error flex h-full min-h-0 w-full flex-col items-center justify-center gap-4 rounded-sm border p-8 text-center">
-      <Icon className="size-14" aria-hidden="true" />
-      <p className="text-sm font-medium">
-        {isConnectionError
-          ? "No se pudo conectar con el servidor"
-          : getErrorMessage(error, "No se pudo cargar la información")}
-      </p>
     </div>
   );
 }

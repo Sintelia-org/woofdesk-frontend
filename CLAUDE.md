@@ -167,6 +167,7 @@ Prefer extending an existing component, schema, request function, provider, stor
 
 ## Local skills
 
+- `frontend-design`: Anthropic's design guidance; use when designing or reshaping views, modals and other visual UI.
 - `security-review`: use for authentication, authorization, inputs, uploads, secrets, endpoints, or sensitive data.
 - `settings-catalog-crud`: use for administrative catalogs; adapt its contract to the grooming-management domain and never invent endpoints.
 - `vercel-composition-patterns`: use when designing reusable component APIs or refactoring component composition.
@@ -223,3 +224,4 @@ Keep the handoff concise and omit unrelated explanation.
 - Views animate element by element with the primitives in `src/components/appear.tsx`: `AppearGroup` as the view root, `GeneralHeader` and `SearchToolbar` as built-in items, `AppearItem` for content blocks, and `AppearList` with `AppearArticle` for cards that mount after their data loads. Keep animations under about 300 ms; `MotionConfig reducedMotion="user"` in `NavigationViewport` honors reduced motion. Forms, menus, modals, drawers and table internals stay immediate.
 - While a view loads, show its skeleton instead of a generic loader. `RouteSkeleton` in `src/components/skeletons.tsx` serves both the pending-navigation overlay and `loading.tsx`; when a view's layout changes, update its entry there. In-view pending states use the matching skeleton pieces (`TableLoading`, `CardsSkeleton`, `ChartSkeleton`).
 - Use Recharts for charts. Take colors from theme tokens (`--color-chart-*`, `base-*`, `neutral`), never hex values in components, and provide an accessible data table when the chart is hidden from assistive technology.
+- Grooming details are reused, not reinvented: the `awning` utility (dialogs, shopfront surfaces; tint with `--awning-color`), `PawTrail` and `BubbleCluster` from `src/components/backdrop.tsx` for background layers, `HangingSign` for empty states without data, and a paw marker for the active navigation item. Keep them decorative (`aria-hidden`, no pointer events), behind content, and out of tables and forms.

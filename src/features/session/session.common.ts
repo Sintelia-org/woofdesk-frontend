@@ -1,13 +1,33 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
-export const whoamiSchema = z.object({
-  userId: z.coerce.number().int().positive(),
-  orgId: z.number().int().positive(),
-  role: z.enum(["ADMIN", "RECEPTIONIST", "GROOMER"]),
-  expiresAt: z.string().datetime({ offset: true }),
-  tenantInContext: z.number().nullable(),
+// GET /api/auth/me, as returned by the backend's MeResponse record.
+const meResponseSchema = z.object({
+  user: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    email: z.string(),
+  }),
+  organization: z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+  }),
+  role: z.object({
+    id: z.number().int().positive(),
+    name: z.enum(["ADMIN", "RECEPTIONIST", "GROOMER"]),
+  }),
 });
-export type WhoamI = z.infer<typeof whoamiSchema>;
+// Flattened for the UI so session consumers keep reading orgId, role, etc.
+export const whoamiSchema = meResponseSchema.transform(
+  ({ user, organization, role }) => ({
+    userId: user.id,
+    userName: user.name,
+    email: user.email,
+    orgId: organization.id,
+    orgName: organization.name,
+    role: role.name,
+  }),
+);
+export type WhoamI = z.output<typeof whoamiSchema>;
 export const loginResponseSchema = z.object({
   expiresAt: z.string(),
   user: z.object({

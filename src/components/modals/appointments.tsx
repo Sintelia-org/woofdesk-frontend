@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Modal, AlertWithMutationModal } from "@/components/modal";
 import { Field } from "@/components/shadcn/field";
 import { Input } from "@/components/shadcn/input";
+import { FormMoneyInput } from "@/components/money-input";
 import { Textarea } from "@/components/shadcn/textarea";
 import { RecordSelect } from "@/components/record-select";
 import { ErrorAlert } from "@/components/forms";
@@ -38,7 +39,7 @@ async function loadPets(search: string, page: number) {
   return {
     options: result.content.map((pet) => ({
       id: pet.id,
-      label: `${pet.name} · ${pet.clientName}`,
+      label: `${pet.name} (${pet.clientName})`,
     })),
     total: result.totalElements,
   };
@@ -164,8 +165,8 @@ function AppointmentForm({
   const surchargeValues = watch("surcharges");
   const net =
     Number(gross || 0) -
-    discountValues.reduce((sum, d) => sum + Number(d.amount || 0), 0) +
-    surchargeValues.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+    discountValues.reduce((sum, d) => sum + (d.amount || 0), 0) +
+    surchargeValues.reduce((sum, s) => sum + (s.amount || 0), 0);
   const mutation = useMutation<Appointment, ServerError, AppointmentInput>({
     mutationFn: async (data) => {
       const response = await apiClient.request({
@@ -181,7 +182,7 @@ function AppointmentForm({
       await queryClient.invalidateQueries({
         queryKey: ["appointments", session.data?.orgId],
       });
-      toast.success("Turno guardado");
+      toast.success(appointment ? "Cambios guardados" : "Turno agregado");
       onClose();
     },
   });
@@ -202,6 +203,7 @@ function AppointmentForm({
         >
           <FormActions
             form="appointment-form"
+            label={appointment ? "Guardar cambios" : "Agregar turno"}
             pending={mutation.isPending}
             error={mutation.error}
             onClose={onClose}
@@ -233,7 +235,7 @@ function AppointmentForm({
           value={watch("petId") || null}
           selectedLabel={
             appointment
-              ? `${appointment.petName} · ${appointment.clientName}`
+              ? `${appointment.petName} (${appointment.clientName})`
               : undefined
           }
           onChange={(id) =>
@@ -296,16 +298,14 @@ function AppointmentForm({
         </fieldset>
         <Field
           htmlFor="appointment-price"
-          label="Precio bruto ($)"
+          label="Precio bruto"
           required
           error={errors.grossPrice?.message}
         >
-          <Input
+          <FormMoneyInput
             id="appointment-price"
-            type="number"
-            step="0.01"
-            min="0"
-            {...register("grossPrice", { valueAsNumber: true })}
+            control={control}
+            name="grossPrice"
           />
         </Field>
         <Field htmlFor="appointment-payment" label="Forma de pago">
@@ -343,7 +343,7 @@ function AppointmentForm({
               {list.fields.map((field, index) => (
                 <div
                   key={field.formKey}
-                  className="grid grid-cols-[minmax(0,1fr)_7rem_auto] gap-2"
+                  className="grid grid-cols-[minmax(0,1fr)_9rem_auto] gap-2"
                 >
                   <div>
                     <Input
@@ -358,14 +358,11 @@ function AppointmentForm({
                     ) : null}
                   </div>
                   <div>
-                    <Input
+                    <FormMoneyInput
                       aria-label={`Monto de ${label.toLowerCase()} ${index + 1}`}
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      {...register(`${kind}.${index}.amount`, {
-                        valueAsNumber: true,
-                      })}
+                      aria-invalid={Boolean(errors[kind]?.[index]?.amount)}
+                      control={control}
+                      name={`${kind}.${index}.amount`}
                     />
                     {errors[kind]?.[index]?.amount ? (
                       <p className="text-error text-xs">
@@ -386,7 +383,7 @@ function AppointmentForm({
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                onClick={() => list.append({ concept: "", amount: 0 })}
+                onClick={() => list.append({ concept: "", amount: Number.NaN })}
               >
                 <PlusIcon className="size-4" />
                 Agregar {kind === "discounts" ? "descuento" : "recargo"}
@@ -447,7 +444,7 @@ export function AppointmentDetailsModal({
           <div>
             <h3 className="text-xl font-semibold">{appointment.petName}</h3>
             <p className="text-base-content/60 text-sm">
-              {appointment.clientName} · {appointmentDate(appointment.datetime)}
+              {appointment.clientName}, {appointmentDate(appointment.datetime)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -491,8 +488,9 @@ export function AppointmentDetailsModal({
             {appointment.info || "Sin observaciones."}
           </p>
           <p className="text-base-content/45 border-t pt-3 text-xs">
-            Creado por {appointment.createdBy}. Última edición:{" "}
-            {appointment.updatedBy} · {appointmentDate(appointment.updatedAt)}
+            Creado por {appointment.createdBy}. Última edición de{" "}
+            {appointment.updatedBy}, el {appointmentDate(appointment.updatedAt)}
+            .
           </p>
         </div>
       ) : null}
@@ -518,6 +516,11 @@ export function AppointmentActionModal({
     reopen: "Volver a agendar",
     delete: "Eliminar turno",
   };
+  const doneMessages = {
+    complete: "Turno completado",
+    reopen: "Turno agendado de nuevo",
+    delete: "Turno eliminado",
+  };
   const mutation = useMutation<unknown, ServerError, number>({
     mutationFn: async (id) => {
       if (action === "delete") {
@@ -541,7 +544,7 @@ export function AppointmentActionModal({
       await queryClient.invalidateQueries({
         queryKey: ["appointments", session.data?.orgId],
       });
-      toast.success("Turno actualizado");
+      toast.success(doneMessages[action]);
       onClose();
     },
   });

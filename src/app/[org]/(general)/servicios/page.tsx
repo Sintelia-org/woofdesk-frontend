@@ -1,17 +1,18 @@
 "use client";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SparklesIcon, ScissorsIcon } from "lucide-react";
+import { PlusIcon, SparklesIcon, ScissorsIcon } from "lucide-react";
 import { GeneralHeader } from "@/components/header";
+import { Button } from "@/components/shadcn/button";
 import { SearchToolbar, ActionButtons } from "@/components/entity-ui";
-import { ErrorInformer } from "@/components/error";
+import { ErrorState } from "@/components/error";
+import { HangingSign } from "@/components/hanging-sign";
 import { AppearArticle, AppearGroup, AppearList } from "@/components/appear";
 import { ServiceModal } from "@/components/modals/services";
 import { CardsSkeleton } from "@/components/skeletons";
 import { getServices } from "@/features/services/requests";
 import type { Service } from "@/features/services/schemas";
 import { useSession } from "@/features/session/session.client";
-import { getErrorMessage } from "@/lib/query";
 import type { ServerError } from "@/lib/types";
 export default function ServicesPage() {
   const session = useSession();
@@ -50,14 +51,17 @@ export default function ServicesPage() {
         onChange={setFilter}
         placeholder="Buscar servicio…"
       />
+      <p className="text-base-content/70 shrink-0 text-xs">
+        El precio de cada servicio se define al agendar el turno.
+      </p>
       {servicesQuery.isPending ? (
         <CardsSkeleton
           count={6}
           className="min-h-0 flex-1 overflow-hidden sm:grid-cols-2 xl:grid-cols-3"
         />
       ) : servicesQuery.isError ? (
-        <ErrorInformer
-          message={getErrorMessage(servicesQuery.error)}
+        <ErrorState
+          error={servicesQuery.error}
           retry={() => {
             void servicesQuery.refetch();
           }}
@@ -80,22 +84,28 @@ export default function ServicesPage() {
                 />
               </div>
               <h2 className="text-lg font-bold">{service.name}</h2>
-              <p className="text-base-content/70 text-sm whitespace-pre-wrap">
-                {service.info || "Sin descripción adicional."}
-              </p>
-              <span className="text-base-content/70 mt-auto pt-3 text-xs">
-                Precio a definir en el turno
-              </span>
+              {service.info ? (
+                <p className="text-base-content/70 text-sm whitespace-pre-wrap">
+                  {service.info}
+                </p>
+              ) : null}
             </AppearArticle>
           ))}
         </AppearList>
       ) : (
-        <div className="border-base-300 bg-base-100 rounded-box border p-10 text-center">
+        <div className="border-base-300 bg-base-100 rounded-box flex flex-col items-center gap-4 border p-10 text-center">
+          {!filter ? <HangingSign label="Sin servicios" /> : null}
           <p className="text-base-content/70">
             {filter
-              ? "No hay servicios que coincidan con tu búsqueda."
-              : "Todavía no hay servicios cargados."}
+              ? `Ningún servicio coincide con "${filter}". Probá con otra palabra.`
+              : "Agregá tus servicios para poder sumarlos a cada turno."}
           </p>
+          {!filter && canWrite ? (
+            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+              <PlusIcon className="size-4" aria-hidden="true" />
+              Agregar servicio
+            </Button>
+          ) : null}
         </div>
       )}
       {isCreateModalOpen ? (

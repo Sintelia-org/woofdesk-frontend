@@ -4,12 +4,9 @@ import {
   PawPrintIcon,
   ScissorsIcon,
   SparklesIcon,
-  UserRoundCogIcon,
   UsersIcon,
-  UserRoundIcon,
-  ShieldCheckIcon,
   BookOpenIcon,
-  KeyRoundIcon,
+  SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
 export type NavigationItem = {
@@ -21,7 +18,7 @@ export type NavigationItem = {
 export type NavigationSection = { label: string; items: NavigationItem[] };
 export const navigationSections: NavigationSection[] = [
   {
-    label: "GESTIÓN",
+    label: "Gestión",
     items: [
       { label: "Resumen", href: "/dashboard", icon: LayoutDashboardIcon },
       { label: "Agenda", href: "/agenda", icon: CalendarDaysIcon },
@@ -31,29 +28,16 @@ export const navigationSections: NavigationSection[] = [
     ],
   },
   {
-    label: "NEGOCIO",
+    label: "Negocio",
     items: [
       { label: "Servicios", href: "/servicios", icon: SparklesIcon },
       { label: "Razas", href: "/razas", icon: BookOpenIcon },
     ],
   },
   {
-    label: "EQUIPO",
+    label: "Ajustes",
     items: [
-      {
-        label: "Personal",
-        href: "/personal",
-        icon: UserRoundCogIcon,
-        adminOnly: true,
-      },
-      {
-        label: "Usuarios",
-        href: "/usuarios",
-        icon: UserRoundIcon,
-        adminOnly: true,
-      },
-      { label: "Roles", href: "/roles", icon: ShieldCheckIcon },
-      { label: "Mi cuenta", href: "/cuenta", icon: KeyRoundIcon },
+      { label: "Configuración", href: "/configuracion", icon: SettingsIcon },
     ],
   },
 ];

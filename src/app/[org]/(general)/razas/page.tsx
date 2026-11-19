@@ -56,6 +56,7 @@ export default function BreedsPage() {
           ariaLabel="Catálogo de razas"
           itemLabel="razas"
           searchInput={filter}
+          emptySign="Sin razas"
           columns={columns}
           data={breedsQuery.data?.slice((page - 1) * 20, page * 20)}
           loading={breedsQuery.isPending}

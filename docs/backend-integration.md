@@ -25,7 +25,7 @@ Source reviewed: `../woofdesk-backend/src/main/java/com/peluqueria/turnos`, incl
 - There are no inventory, cash-ledger or report endpoints. Navigation no longer advertises those screens.
 - `/api/platform/**` provisions organizations with a separate secret key. It is platform administration, not a tenant screen, and is intentionally excluded from the browser application. No platform key is consumed.
 - Clients, pets, employees and users use deactivation; their history is retained. Appointment deletion is permanent and requires confirmation.
-- The backend's `/me` response provides userId, orgId and role, but no organization handle, user name or organization name. Authenticated routes currently use the numeric orgId in `[org]`; the shell shows actual IDs rather than invented names. A persistent friendly handle/name requires a backend contract extension.
+- `/me` returns `{ user: { id, name, email }, organization: { id, name }, role: { id, name } }`; `whoamiSchema` validates that contract and flattens it to `userId`, `userName`, `email`, `orgId`, `orgName` and `role` for the UI. It carries no session expiry and no organization handle, so authenticated routes still use the numeric orgId in `[org]`.
 - Date-range filters are organization-local dates and accept at most 62 days inclusive. Displayed times and datetime-local inputs use the device timezone, with an explicit label. Absolute timestamps sent to the backend include a timezone (ISO UTC). The backend preserves the instant and returns the organization's offset. The organization timezone is not exposed by /me; the UI must not guess it.
 - Tables sort the loaded page. Catalogs and appointment lists return arrays and use client pagination; other entities use server pagination (API zero-based, UI one-based).
 
@@ -33,7 +33,7 @@ Source reviewed: `../woofdesk-backend/src/main/java/com/peluqueria/turnos`, incl
 
 Every CRUD page owns its search, pagination, query, columns and modal selection, following Gargano. Requests and Zod response schemas live in each feature. Entity forms/mutations live in `src/components/modals/{entity}.tsx`, with React Hook Form, zodResolver, pending/disabled actions, inline errors, success feedback and query invalidation. Shared headers and field primitives keep visual consistency without a metadata-driven CRUD engine.
 
-Query keys include the organization ID. SessionGuard waits for /me, handles expired sessions, and redirects a mismatched URL to the authenticated organization. Backend authorization and Hibernate tenant isolation remain the authority. All queries are cleared on login/logout to prevent cached tenant data crossing sessions.
+Query keys include the organization ID. SessionGuard waits for /me, handles expired sessions, and redirects a mismatched URL to the authenticated organization. It guards only the view area, and `[org]/(general)/error.tsx` renders inside the layout, so failures keep the navigation. View errors use `ErrorState`, which lists every field rejected by Zod. Backend authorization and Hibernate tenant isolation remain the authority. All queries are cleared on login/logout to prevent cached tenant data crossing sessions.
 
 ## Roles
 

@@ -72,6 +72,50 @@
   }
 }
 
+/* Shopfront awning: stripes with a scalloped edge. --awning-color tints it
+   (primary by default); --awning-band and --awning-r scale the stripes and
+   the scallops. */
+@utility awning {
+  --awning-fill: var(--awning-color, var(--color-primary));
+  --awning-soft: color-mix(
+    in oklab,
+    var(--awning-fill) 24%,
+    var(--color-base-100)
+  );
+  --awning-stripe: calc(var(--awning-r, 12px) * 2 + 4px);
+  height: calc(var(--awning-band, 18px) + var(--awning-r, 12px));
+  background:
+    radial-gradient(
+        circle at calc(var(--awning-stripe) / 2) var(--awning-band, 18px),
+        var(--awning-fill) 0 var(--awning-r, 12px),
+        transparent calc(var(--awning-r, 12px) + 0.5px)
+      )
+      0 0 / calc(var(--awning-stripe) * 2) 100% repeat-x,
+    radial-gradient(
+        circle at calc(var(--awning-stripe) * 1.5) var(--awning-band, 18px),
+        var(--awning-soft) 0 var(--awning-r, 12px),
+        transparent calc(var(--awning-r, 12px) + 0.5px)
+      )
+      0 0 / calc(var(--awning-stripe) * 2) 100% repeat-x,
+    repeating-linear-gradient(
+        90deg,
+        var(--awning-fill) 0 var(--awning-stripe),
+        var(--awning-soft) 0 calc(var(--awning-stripe) * 2)
+      )
+      0 0 / 100% var(--awning-band, 18px) no-repeat;
+}
+
+/* Bath bubble: a faint ring with a highlight. */
+@utility bubble {
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in oklab, var(--color-primary) 24%, transparent);
+  background: radial-gradient(
+    circle at 32% 28%,
+    var(--color-base-100) 0 11%,
+    transparent 12%
+  );
+}
+
 @layer base {
   * {
     border-color: color-mix(

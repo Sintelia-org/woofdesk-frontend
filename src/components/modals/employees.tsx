@@ -28,7 +28,7 @@ async function loadUsers(search: string, page: number) {
   return {
     options: result.content.map((user) => ({
       id: user.id,
-      label: `${user.name} · ${user.email}`,
+      label: `${user.name} (${user.email})`,
     })),
     total: result.totalElements,
   };
@@ -81,7 +81,7 @@ export function EmployeeModal({
       await queryClient.invalidateQueries({
         queryKey: ["employees", session.data?.orgId],
       });
-      toast.success("Empleado guardado");
+      toast.success(employee ? "Cambios guardados" : "Empleado agregado");
       onClose();
     },
   });
@@ -94,6 +94,7 @@ export function EmployeeModal({
       footer={
         <FormActions
           form="employee-form"
+          label={employee ? "Guardar cambios" : "Agregar empleado"}
           pending={mutation.isPending}
           error={mutation.error}
           onClose={onClose}
@@ -186,7 +187,9 @@ export function ToggleEmployeeModal({
       await queryClient.invalidateQueries({
         queryKey: ["employees", session.data?.orgId],
       });
-      toast.success("Estado del empleado actualizado");
+      toast.success(
+        employee.active ? "Empleado desactivado" : "Empleado reactivado",
+      );
       onClose();
     },
   });
@@ -198,7 +201,9 @@ export function ToggleEmployeeModal({
       data={employee.id}
       title={employee.active ? "Desactivar empleado" : "Reactivar empleado"}
       description="Cambiar el estado del empleado"
-      buttonText={employee.active ? "Desactivar" : "Reactivar"}
+      buttonText={
+        employee.active ? "Desactivar empleado" : "Reactivar empleado"
+      }
       type={employee.active ? "warning" : "success"}
     >
       ¿Querés {employee.active ? "desactivar" : "reactivar"} a{" "}

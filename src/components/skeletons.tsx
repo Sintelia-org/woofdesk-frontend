@@ -1,5 +1,6 @@
 import { TableLoading } from "@/components/table";
 import { cn } from "@/lib/cn";
+import { BubbleCluster, PawTrail } from "./backdrop";
 
 const gridPageClassName =
   "grid-page flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-hidden p-4 sm:p-6 lg:p-8";
@@ -15,7 +16,8 @@ type RouteSkeletonConfig = {
 };
 
 // One entry per view in src/app/[org]/(general); keep in sync when a view's
-// layout changes so the skeleton matches what replaces it.
+// layout changes so the skeleton matches what replaces it. Settings tabs
+// (personal, usuarios, roles, cuenta) are looked up by their own segment.
 const routeSkeletons: Record<string, RouteSkeletonConfig> = {
   dashboard: { body: "dashboard", button: true },
   agenda: {
@@ -38,10 +40,15 @@ const routeSkeletons: Record<string, RouteSkeletonConfig> = {
   usuarios: { body: "table", toolbar: true, filters: 1, button: true },
   roles: {
     body: "cards",
-    toolbar: true,
-    cards: { count: 3, className: "lg:grid-cols-3" },
+    cards: {
+      count: 2,
+      className: "lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]",
+    },
   },
-  cuenta: { body: "cards", cards: { count: 2, className: "lg:grid-cols-2" } },
+  cuenta: {
+    body: "cards",
+    cards: { count: 2, className: "max-w-6xl lg:grid-cols-[2fr_3fr]" },
+  },
   ayuda: { body: "cards", cards: { count: 4, className: "lg:grid-cols-2" } },
 };
 const fallbackSkeleton: RouteSkeletonConfig = {
@@ -70,7 +77,7 @@ export function HeaderSkeleton({
       <div className="flex items-center gap-3">
         <Bone className="bg-primary/15 size-11 shrink-0 rounded-xl" />
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-end gap-3">
             <Bone className="h-8 w-44 rounded-lg" />
             <Bone className="h-6 w-9 rounded-full" />
           </div>
@@ -153,10 +160,24 @@ export function ChartSkeleton() {
   );
 }
 
+function TabsSkeleton() {
+  return (
+    <div className="flex shrink-0 gap-3 pt-1 pb-3">
+      {Array.from({ length: 4 }, (_, index) => (
+        <Bone key={index} className="rounded-box h-15 w-full max-w-64" />
+      ))}
+    </div>
+  );
+}
+
 export function RouteSkeleton({ pathname }: { pathname: string }) {
-  // Authenticated paths are /{org}/{view}/...
-  const view = pathname.split("/")[2] ?? "";
-  const config = routeSkeletons[view] ?? fallbackSkeleton;
+  // Authenticated paths are /{org}/{view}/... and /{org}/configuracion/{tab}.
+  const [, , view = "", tab = ""] = pathname.split("/");
+  const isSettings = view === "configuracion";
+  const config =
+    routeSkeletons[isSettings ? tab : view] ??
+    (isSettings ? routeSkeletons.cuenta : undefined) ??
+    fallbackSkeleton;
   const scrolls = config.body === "dashboard" || !config.toolbar;
   return (
     <div
@@ -164,11 +185,14 @@ export function RouteSkeleton({ pathname }: { pathname: string }) {
       aria-busy="true"
       className={scrolls ? scrollPageClassName : gridPageClassName}
     >
+      <PawTrail className="text-secondary/25 absolute bottom-6 left-6 -z-10" />
+      <BubbleCluster className="absolute top-4 right-6 -z-10" />
       <span className="sr-only">Cargando vista…</span>
       <HeaderSkeleton
-        button={config.button}
-        subtitle={config.body === "dashboard"}
+        button={!isSettings && config.button}
+        subtitle={isSettings || config.body === "dashboard"}
       />
+      {isSettings ? <TabsSkeleton /> : null}
       {config.toolbar ? <ToolbarSkeleton filters={config.filters} /> : null}
       {config.body === "dashboard" ? (
         <DashboardSkeleton />

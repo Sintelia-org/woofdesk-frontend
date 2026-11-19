@@ -1,44 +1,42 @@
 "use client";
 import { InfoIcon, MenuIcon, PawPrintIcon, LogOutIcon } from "lucide-react";
 import { NavigationLink as Link } from "@/components/layout/route-navigation";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { useParams, usePathname } from "next/navigation";
 import { useState } from "react";
 import { Sheet, SheetContent } from "@/components/shadcn/sheet";
 import { ErrorAlert } from "@/components/forms";
 import { useSession, useLogout } from "@/features/session/session.client";
-import { roleLabels } from "@/features/shared/format";
+import { initials, roleLabels } from "@/features/shared/format";
 import { getErrorMessage } from "@/lib/query";
 import { cn } from "@/lib/cn";
 import { navigationSections } from "@/utils/sections";
 function Brand() {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="bg-primary text-neutral flex size-9 items-center justify-center rounded-xl">
-        <PawPrintIcon className="size-5" />
-      </span>
-      <div>
-        <span className="text-neutral-content block text-lg font-bold">
-          WoofDesk
-        </span>
-        <span className="text-secondary/70 font-mono-ui block text-[9px] tracking-widest">
-          GROOMING OS
-        </span>
-      </div>
-    </div>
+    <Image
+      src="/brand/woofdesk-logo-dark.webp"
+      alt="WoofDesk"
+      width={1820}
+      height={356}
+      priority
+      className="h-9 w-auto"
+    />
   );
 }
 function NavigationContent({ onNavigate }: { onNavigate?: () => void }) {
   const session = useSession();
   const pathname = usePathname();
   const logout = useLogout();
-  const org = session.data?.orgId;
+  const params = useParams<{ org: string }>();
+  // The URL segment keeps links working while /me is pending or failed.
+  const org = session.data?.orgId ?? params.org;
   return (
     <div className="bg-neutral flex h-full flex-col justify-between gap-6 overflow-y-auto px-4.5 py-7">
       <div className="flex flex-col gap-6">
         <Brand />
         <div className="bg-base-100/5 rounded-xl p-3">
-          <p className="text-neutral-content text-xs font-semibold">
-            Organización #{org}
+          <p className="text-neutral-content truncate text-xs font-semibold">
+            {session.data?.orgName ?? `Organización #${org}`}
           </p>
           <p className="text-secondary/70 mt-1 text-[10px]">
             Espacio de trabajo
@@ -51,7 +49,7 @@ function NavigationContent({ onNavigate }: { onNavigate?: () => void }) {
             );
             return (
               <div key={section.label} className="flex flex-col gap-1">
-                <p className="text-secondary/65 font-mono-ui mb-1 px-3 text-[9px] font-semibold tracking-widest">
+                <p className="text-secondary/80 mb-1 px-3 text-[11px] font-semibold">
                   {section.label}
                 </p>
                 {items.map((item) => {
@@ -80,9 +78,11 @@ function NavigationContent({ onNavigate }: { onNavigate?: () => void }) {
                       />
                       <span>{item.label}</span>
                       {active ? (
-                        <span
+                        <PawPrintIcon
                           aria-hidden="true"
-                          className="bg-accent ml-auto size-1.5 rounded-full"
+                          fill="currentColor"
+                          strokeWidth={1}
+                          className="text-neutral ml-auto size-3.5"
                         />
                       ) : null}
                     </Link>
@@ -103,16 +103,16 @@ function NavigationContent({ onNavigate }: { onNavigate?: () => void }) {
           Centro de ayuda
         </Link>
         <Link
-          href={`/${org}/cuenta`}
+          href={`/${org}/configuracion/cuenta`}
           onClick={onNavigate}
           className="border-secondary/25 flex items-center gap-3 border-t pt-4"
         >
           <span className="bg-accent text-neutral flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-            #{session.data?.userId}
+            {session.data ? initials(session.data.userName) : "?"}
           </span>
-          <div>
-            <p className="text-neutral-content text-xs font-semibold">
-              Usuario #{session.data?.userId}
+          <div className="min-w-0">
+            <p className="text-neutral-content truncate text-xs font-semibold">
+              {session.data?.userName ?? "Mi cuenta"}
             </p>
             <p className="text-secondary/80 text-[10px]">
               {roleLabels[session.data?.role ?? ""]}
@@ -123,7 +123,7 @@ function NavigationContent({ onNavigate }: { onNavigate?: () => void }) {
           type="button"
           disabled={logout.isPending}
           onClick={() => logout.mutate()}
-          className="text-secondary hover:text-neutral-content flex items-center gap-2 self-start px-1 py-2 text-xs"
+          className="text-secondary hover:text-neutral-content flex cursor-pointer items-center gap-2 self-start px-1 py-2 text-xs"
         >
           <LogOutIcon className="size-3.5" />
           {logout.isPending ? "Cerrando…" : "Cerrar sesión"}

@@ -1,7 +1,7 @@
 "use client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { useState } from "react";
 import {
   Bar,
@@ -9,10 +9,12 @@ import {
   CartesianGrid,
   Cell,
   LabelList,
+  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  type BarShapeProps,
 } from "recharts";
 import { cn } from "@/lib/cn";
 import { capitalize, compactMoney, wholeMoney } from "./format";
@@ -34,7 +36,7 @@ const axisTick = {
   fill: "var(--color-base-content)",
   fillOpacity: 0.7,
   fontSize: 10,
-  fontFamily: "var(--font-geist-mono)",
+  fontFamily: "var(--font-geist-sans)",
 };
 
 function incomeScale(data: DailyIncome[]) {
@@ -61,7 +63,7 @@ function dayDetail(item: DailyIncome) {
       format(new Date(item.date + "T12:00:00"), "EEEE d 'de' MMMM", {
         locale: es,
       }),
-    ) + (item.isToday ? " · hoy" : "");
+    ) + (item.isToday ? " (hoy)" : "");
   if (item.completed > 0)
     return {
       title,
@@ -124,6 +126,39 @@ function DayTick({
   );
 }
 
+const growEase = [0.16, 1, 0.3, 1] as const;
+
+// Bars grow from the axis in a left-to-right wave. Recharts' own animation is
+// off so both do not compete; MotionConfig skips the transform when the user
+// prefers reduced motion.
+function GrowingBar({
+  x,
+  y,
+  width,
+  height,
+  radius,
+  fill,
+  index,
+}: BarShapeProps) {
+  return (
+    <motion.g
+      initial={{ scaleY: 0 }}
+      animate={{ scaleY: 1 }}
+      transition={{ duration: 0.55, ease: growEase, delay: index * 0.02 }}
+      style={{ transformBox: "fill-box", transformOrigin: "50% 100%" }}
+    >
+      <Rectangle
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        radius={radius}
+        fill={fill}
+      />
+    </motion.g>
+  );
+}
+
 function ActiveIncomeLabel({
   x,
   y,
@@ -148,7 +183,7 @@ function ActiveIncomeLabel({
       fill="var(--color-base-content)"
       fontSize={10}
       fontWeight={600}
-      fontFamily="var(--font-geist-mono)"
+      fontFamily="var(--font-geist-sans)"
     >
       {compactMoney(Number(value))}
     </text>
@@ -158,16 +193,16 @@ function ActiveIncomeLabel({
 export function DailyIncomeChart({
   data,
   monthLabel,
-  defaultIndex,
+  selectedIndex,
+  onSelect,
 }: {
   data: DailyIncome[];
   monthLabel: string;
-  defaultIndex: number;
+  selectedIndex: number;
+  onSelect: (index: number) => void;
 }) {
-  const reduceMotion = useReducedMotion();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const activeIndex = hoveredIndex ?? selectedIndex ?? defaultIndex;
+  const activeIndex = hoveredIndex ?? selectedIndex;
   const active = data[activeIndex] ? dayDetail(data[activeIndex]) : null;
   const scale = incomeScale(data);
   // A thin marker keeps days with only scheduled appointments visible
@@ -185,18 +220,18 @@ export function DailyIncomeChart({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h2 id="daily-income-title" className="text-lg font-bold">
-            Ganancia y turnos por día
+            Ganancia y turnos de {monthLabel.toLowerCase()}
           </h2>
           <p className="text-base-content/70 mt-1 text-xs">
-            {monthLabel} · la altura de cada barra es la ganancia del día; pasá
-            el cursor o tocá una barra para ver el detalle
+            La altura de cada barra es la ganancia del día. Tocá una barra para
+            ver el detalle.
           </p>
         </div>
         {active ? (
           <div className="bg-base-200 rounded-field flex min-w-64 flex-col gap-1 px-3.5 py-2.5">
             <p className="text-xs font-semibold">{active.title}</p>
             <div className="flex items-baseline gap-3.5">
-              <span className="font-mono-ui text-xl font-bold">
+              <span className="text-xl font-bold tabular-nums">
                 {active.money}
               </span>
               <span className="text-[13px]">{active.count}</span>
@@ -223,7 +258,7 @@ export function DailyIncomeChart({
                 onMouseLeave={() => setHoveredIndex(null)}
                 onClick={(state) => {
                   const index = chartIndex(state.activeTooltipIndex);
-                  if (index !== null) setSelectedIndex(index);
+                  if (index !== null) onSelect(index);
                 }}
               >
                 <CartesianGrid
@@ -261,7 +296,8 @@ export function DailyIncomeChart({
                   stackId="day"
                   maxBarSize={22}
                   radius={[4, 4, 0, 0]}
-                  isAnimationActive={!reduceMotion}
+                  isAnimationActive={false}
+                  shape={GrowingBar}
                 >
                   {data.map((item, index) => (
                     <Cell
@@ -283,7 +319,8 @@ export function DailyIncomeChart({
                   stackId="day"
                   maxBarSize={22}
                   radius={[2, 2, 0, 0]}
-                  isAnimationActive={!reduceMotion}
+                  isAnimationActive={false}
+                  shape={GrowingBar}
                 >
                   {data.map((item, index) => (
                     <Cell
@@ -304,11 +341,14 @@ export function DailyIncomeChart({
               Turnos
             </span>
             <div className="bg-base-200 flex flex-1 rounded-lg py-1.5">
-              {data.map((item) => (
-                <span
+              {data.map((item, index) => (
+                <motion.span
                   key={item.date}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.2 + index * 0.02 }}
                   className={cn(
-                    "font-mono-ui min-w-0 flex-1 text-center text-[11px] font-semibold",
+                    "min-w-0 flex-1 text-center text-[11px] font-semibold tabular-nums",
                     item.completed > 0
                       ? "text-base-content"
                       : item.scheduled > 0
@@ -317,7 +357,7 @@ export function DailyIncomeChart({
                   )}
                 >
                   {item.completed || item.scheduled || "—"}
-                </span>
+                </motion.span>
               ))}
             </div>
           </div>

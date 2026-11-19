@@ -26,7 +26,7 @@ import {
   PlusIcon,
   SearchXIcon,
 } from "lucide-react";
-import { DatePickerPopover } from "@/components/date";
+import { MonthlyDatePicker } from "@/components/date";
 import { SelectInput } from "@/components/select-input";
 import { Button } from "@/components/shadcn/button";
 import { LoadingSpinner } from "@/components/loading";
@@ -554,12 +554,11 @@ export function AppointmentCalendar({
               <ChevronRightIcon className="size-4" />
             </button>
           </div>
-          <DatePickerPopover
+          <MonthlyDatePicker
             value={state.date}
-            allowClear={false}
             disabled={pendingId !== undefined}
             aria-label="Ir a fecha"
-            className="h-8 w-36 text-xs"
+            className="h-8 w-52 bg-white text-xs"
             onChange={(date) => onStateChange({ ...state, date })}
           />
           <SelectInput
@@ -686,7 +685,7 @@ export function AppointmentCalendar({
               )}
             >
               <p className="font-semibold">
-                {active.petName} · {calendarTime(active.datetime)}
+                {active.petName}, {calendarTime(active.datetime)}
               </p>
               <p className="text-base-content/60">{active.clientName}</p>
             </div>
@@ -714,7 +713,9 @@ export function AppointmentCalendar({
             </span>
           ) : null}
         </div>
-        <span>Horarios de este dispositivo · Se muestra la hora de inicio</span>
+        <span>
+          Horarios de este dispositivo. Cada turno muestra su hora de inicio.
+        </span>
       </footer>
     </section>
   );

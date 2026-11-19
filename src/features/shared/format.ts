@@ -3,6 +3,23 @@ export const roleLabels: Record<string, string> = {
   RECEPTIONIST: "Recepcionista",
   GROOMER: "Peluquero",
 };
+export const roleDescriptions: Record<string, string> = {
+  ADMIN:
+    "Administra el equipo, los usuarios y el catálogo. Puede completar, reabrir y eliminar turnos.",
+  RECEPTIONIST:
+    "Consulta la agenda y administra clientes, mascotas y turnos agendados.",
+  GROOMER:
+    "Consulta clientes, mascotas, servicios y agenda. No modifica registros.",
+};
+export function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
 export function money(value: number) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",

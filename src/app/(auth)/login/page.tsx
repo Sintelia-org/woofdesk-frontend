@@ -5,7 +5,6 @@ import {
   EyeOffIcon,
   LockIcon,
   MailIcon,
-  PawPrintIcon,
   ShieldCheckIcon,
 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,10 +15,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ServerError } from "@/lib/types";
 import { apiClient } from "@/lib/http/client";
 import { RecoveryPasswordModal } from "@/components/modals/auth";
+import { BubbleCluster, PawTrail } from "@/components/backdrop";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ErrorAlert, ErrorLabel } from "@/components/forms";
 import { Button } from "@/components/shadcn/button";
-import { RouteProgressBar } from "@/components/loading";
+import { LoadingScreen, RouteProgressBar } from "@/components/loading";
 import { getErrorMessage } from "@/lib/query";
 import { useSession } from "@/features/session/session.client";
 import { loginResponseSchema } from "@/features/session/session.common";
@@ -89,22 +90,29 @@ export default function LoginPage() {
         )
     : undefined;
 
+  // The form only appears once /me confirms there is no session; an existing
+  // session keeps the loading screen until the dashboard route commits.
+  if (session.isPending) return <LoadingScreen />;
+  if (session.data) return <LoadingScreen />;
+
   return (
     <section className="flex min-h-screen w-full items-stretch">
       {isRedirecting ? (
         <RouteProgressBar label="Redirigiendo al panel" />
       ) : null}
       <article className="bg-neutral relative hidden min-h-screen w-full max-w-xl flex-col justify-between overflow-hidden p-10 lg:flex">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary flex items-center justify-center rounded-lg p-2">
-            <PawPrintIcon className="text-neutral size-5 min-w-5" />
-          </div>
-          <span className="text-xl font-semibold text-white">WoofDesk</span>
-        </div>
+        <Image
+          src="/brand/woofdesk-logo-dark.webp"
+          alt="WoofDesk"
+          width={1820}
+          height={356}
+          priority
+          className="relative h-10 w-auto self-start"
+        />
 
         <div className="flex h-56 flex-col gap-6">
-          <p className="text-primary font-mono text-xs tracking-wide">
-            GESTIÓN PARA PELUQUERÍAS CANINAS
+          <p className="text-primary text-sm font-semibold">
+            Gestión para peluquerías caninas
           </p>
 
           <p className="text-5xl font-bold tracking-tighter text-balance text-white">
@@ -123,15 +131,25 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <div className="bg-primary/30 absolute -top-10 -right-24 size-56 min-w-5 rounded-full" />
-        <div className="bg-primary/10 absolute bottom-2 -left-24 size-44 min-w-5 rounded-full" />
+        <BubbleCluster className="absolute top-8 right-6" />
+        <PawTrail className="text-primary/15 absolute right-16 bottom-10" />
       </article>
       <form
         onSubmit={handleSubmit(onSubmit)}
         aria-busy={isSubmitting}
-        className="bg-base-100 flex min-h-screen flex-1 flex-col items-center justify-center px-6 py-10 sm:px-10"
+        className="bg-base-100 relative flex min-h-screen flex-1 flex-col items-center justify-center px-6 py-14 sm:px-10"
       >
+        <div aria-hidden="true" className="awning absolute inset-x-0 top-0" />
         <div className="flex w-full max-w-sm flex-col gap-4">
+          {/* The brand panel is hidden below lg, so the form carries the logo. */}
+          <Image
+            src="/brand/woofdesk-logo.webp"
+            alt="WoofDesk"
+            width={1820}
+            height={356}
+            priority
+            className="mb-4 h-9 w-auto self-start lg:hidden"
+          />
           <div className="flex w-full flex-col gap-2">
             <span className="text-neutral text-4xl font-bold tracking-tighter">
               Iniciar sesión

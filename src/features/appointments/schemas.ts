@@ -20,7 +20,7 @@ export const adjustmentSchema = z.object({
   id: z.number().optional(),
   concept: z.string().trim().min(1, "Ingresá un concepto").max(100),
   amount: z
-    .number()
+    .number({ invalid_type_error: "Ingresá un monto" })
     .min(0.01, "El monto debe ser mayor a cero")
     .max(9999999999.99)
     .multipleOf(0.01),
@@ -63,7 +63,7 @@ export const appointmentInputSchema = z
       .refine((v) => !Number.isNaN(new Date(v).getTime()), "Fecha no válida"),
     serviceIds: z.array(z.number()).min(1, "Seleccioná al menos un servicio"),
     grossPrice: z
-      .number()
+      .number({ invalid_type_error: "Ingresá el precio" })
       .min(0, "El precio no puede ser negativo")
       .max(9999999999.99)
       .multipleOf(0.01),

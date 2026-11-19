@@ -105,7 +105,7 @@ export function NavigationViewport({ children }: { children: ReactNode }) {
         {navigation?.pending ? (
           // Same skeleton as the route's loading.tsx, so the hand-off from
           // the pending transition to the loading boundary is not visible.
-          <div className="bg-base-200 absolute inset-0 z-30">
+          <div className="absolute inset-0 z-30 bg-[#F9F9F9]">
             <RouteSkeleton pathname={navigation.targetPathname ?? pathname} />
           </div>
         ) : null}

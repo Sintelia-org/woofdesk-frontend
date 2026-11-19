@@ -80,7 +80,7 @@ export function UserModal({
         queryKey: ["employees", session.data?.orgId],
       });
       await queryClient.invalidateQueries({ queryKey: ["session"] });
-      toast.success("Usuario guardado");
+      toast.success(user ? "Cambios guardados" : "Usuario agregado");
       onClose();
     },
   });
@@ -93,6 +93,7 @@ export function UserModal({
       footer={
         <FormActions
           form="user-form"
+          label={user ? "Guardar cambios" : "Agregar usuario"}
           pending={mutation.isPending}
           error={mutation.error}
           onClose={onClose}
@@ -202,7 +203,7 @@ export function ToggleUserModal({
       await queryClient.invalidateQueries({
         queryKey: ["employees", session.data?.orgId],
       });
-      toast.success("Estado del usuario actualizado");
+      toast.success(user.active ? "Usuario desactivado" : "Usuario reactivado");
       onClose();
     },
   });
@@ -214,7 +215,7 @@ export function ToggleUserModal({
       data={user.id}
       title={user.active ? "Desactivar usuario" : "Reactivar usuario"}
       description="Cambiar el acceso al sistema"
-      buttonText={user.active ? "Desactivar" : "Reactivar"}
+      buttonText={user.active ? "Desactivar usuario" : "Reactivar usuario"}
       type={user.active ? "warning" : "success"}
     >
       ¿Querés {user.active ? "desactivar" : "reactivar"} a{" "}
@@ -246,7 +247,7 @@ export function UserPasswordModal({
       await apiClient.post(`/api/users/${user.id}/password`, data);
     },
     onSuccess: () => {
-      toast.success("Contraseña actualizada");
+      toast.success("Contraseña asignada");
       onClose();
     },
   });
@@ -259,6 +260,7 @@ export function UserPasswordModal({
       footer={
         <FormActions
           form="admin-password-form"
+          label="Asignar contraseña"
           pending={mutation.isPending}
           error={mutation.error}
           onClose={onClose}

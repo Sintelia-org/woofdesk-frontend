@@ -41,7 +41,7 @@ export function RecoveryPasswordModal({
       isOpen={isOpen}
       onClose={onClose}
       locked={mutation.isPending}
-      title=""
+      title="Recuperar contraseña"
       footer={
         !mutation.isSuccess ? (
           <FormActions
@@ -74,11 +74,9 @@ export function RecoveryPasswordModal({
             <div className="border-neutral/30 text-neutral/70 bg-neutral/10 flex items-center justify-center rounded-md p-2">
               <LockKeyholeOpenIcon className="size-10 min-w-10" />
             </div>
-            <span className="text-lg font-medium">Recuperar contraseña</span>
-
             <p className="text-center text-sm text-balance">
-              Ingrese el email con el que registró su cuenta. Le enviaremos un
-              mail para que pueda recuperarla.
+              Ingresá el mail de tu cuenta y te enviamos un enlace para crear
+              una contraseña nueva.
             </p>
           </div>
           <form

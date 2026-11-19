@@ -76,7 +76,7 @@ export function LoadingScreen({
     <div
       aria-live="polite"
       className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center bg-white px-6",
+        "fixed inset-0 z-100 flex items-center justify-center bg-white px-6",
         className,
       )}
       role="status"

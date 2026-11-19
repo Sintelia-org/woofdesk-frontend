@@ -36,7 +36,7 @@ async function loadClients(search: string, page: number) {
   return {
     options: result.content.map((client) => ({
       id: client.id,
-      label: `${client.name} · ${client.phone}`,
+      label: `${client.name} (${client.phone})`,
     })),
     total: result.totalElements,
   };
@@ -102,7 +102,7 @@ export function PetModal({
       await queryClient.invalidateQueries({
         queryKey: ["appointments", session.data?.orgId],
       });
-      toast.success("Mascota guardada");
+      toast.success(pet ? "Cambios guardados" : "Mascota agregada");
       onClose();
     },
   });
@@ -115,6 +115,7 @@ export function PetModal({
       footer={
         <FormActions
           form="pet-form"
+          label={pet ? "Guardar cambios" : "Agregar mascota"}
           pending={mutation.isPending}
           error={mutation.error}
           onClose={onClose}
@@ -307,7 +308,7 @@ export function TogglePetModal({
       await queryClient.invalidateQueries({
         queryKey: ["pets", session.data?.orgId],
       });
-      toast.success("Estado de la mascota actualizado");
+      toast.success(pet.active ? "Mascota desactivada" : "Mascota reactivada");
       onClose();
     },
   });
@@ -319,7 +320,7 @@ export function TogglePetModal({
       data={pet.id}
       title={pet.active ? "Desactivar mascota" : "Reactivar mascota"}
       description="Cambiar el estado de la mascota"
-      buttonText={pet.active ? "Desactivar" : "Reactivar"}
+      buttonText={pet.active ? "Desactivar mascota" : "Reactivar mascota"}
       type={pet.active ? "warning" : "success"}
     >
       ¿Querés {pet.active ? "desactivar" : "reactivar"} a{" "}

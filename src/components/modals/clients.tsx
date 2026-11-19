@@ -58,7 +58,7 @@ export function ClientModal({ isOpen, onClose, client }: Props) {
           queryKey: ["appointments", session.data?.orgId],
         }),
       ]);
-      toast.success(client ? "Cliente actualizado" : "Cliente agregado");
+      toast.success(client ? "Cambios guardados" : "Cliente agregado");
       onClose();
     },
   });
@@ -71,6 +71,7 @@ export function ClientModal({ isOpen, onClose, client }: Props) {
       footer={
         <FormActions
           form="client-form"
+          label={client ? "Guardar cambios" : "Agregar cliente"}
           pending={mutation.isPending}
           error={mutation.error}
           onClose={onClose}
@@ -165,7 +166,9 @@ export function ToggleClientModal({
       await queryClient.invalidateQueries({
         queryKey: ["pets", session.data?.orgId],
       });
-      toast.success("Estado del cliente actualizado");
+      toast.success(
+        client.active ? "Cliente desactivado" : "Cliente reactivado",
+      );
       onClose();
     },
   });
@@ -177,11 +180,13 @@ export function ToggleClientModal({
       data={client.id}
       title={client.active ? "Desactivar cliente" : "Reactivar cliente"}
       description="Cambiar el estado del cliente"
-      buttonText={client.active ? "Desactivar" : "Reactivar"}
+      buttonText={client.active ? "Desactivar cliente" : "Reactivar cliente"}
       type={client.active ? "warning" : "success"}
     >
-      ¿Querés {client.active ? "desactivar" : "reactivar"} a{" "}
-      <strong>{client.name}</strong>? Su historial se conserva.
+      <span className="text-base">
+        ¿Querés {client.active ? "desactivar" : "reactivar"} a{" "}
+        <strong>{client.name}</strong>? Su historial se conserva.
+      </span>
     </AlertWithMutationModal>
   );
 }

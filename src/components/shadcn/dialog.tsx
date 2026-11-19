@@ -18,6 +18,14 @@ const borderColor = {
   success: "border-success",
   warning: "border-warning",
 };
+// The awning on top of every dialog takes the dialog type's color.
+const awningColor: Record<DialogTypes, string> = {
+  default: "",
+  danger: "[--awning-color:var(--color-error)]",
+  info: "[--awning-color:var(--color-info)]",
+  success: "[--awning-color:var(--color-success)]",
+  warning: "[--awning-color:var(--color-warning)]",
+};
 
 const Dialog = RadixDialog.Root;
 const DialogTrigger = RadixDialog.Trigger;
@@ -46,11 +54,11 @@ function DialogContent({
 }: DialogContentProps) {
   return (
     <RadixDialog.Portal>
-      <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px] focus-visible:outline-none" />
+      <RadixDialog.Overlay className="bg-neutral/60 fixed inset-0 z-50 backdrop-blur-[2px] focus-visible:outline-none" />
       <RadixDialog.Content
         ref={ref}
         className={cn(
-          "fixed inset-x-0 top-1/2 z-50 mx-auto flex w-full max-w-2xl -translate-y-1/2 justify-center px-4 tracking-wide focus:outline-none focus-visible:outline-none",
+          "fixed inset-x-0 top-1/2 z-50 mx-auto flex w-full max-w-2xl -translate-y-1/2 justify-center px-4 focus:outline-none focus-visible:outline-none",
           className,
         )}
         {...props}
@@ -63,10 +71,17 @@ function DialogContent({
             contentClassName,
           )}
         >
+          <div
+            aria-hidden="true"
+            className={cn(
+              "awning shrink-0 [--awning-band:10px] [--awning-r:8px]",
+              awningColor[type],
+            )}
+          />
           {children}
 
           {showXButton && !locked ? (
-            <RadixDialog.Close className="text-base-content/55 hover:bg-base-200 hover:text-base-content absolute top-4 right-4 flex size-9 cursor-pointer items-center justify-center rounded-sm">
+            <RadixDialog.Close className="text-base-content/55 hover:bg-base-200 hover:text-base-content absolute top-8 right-4 flex size-9 cursor-pointer items-center justify-center rounded-sm">
               <XIcon className="size-5" />
               <span className="sr-only">Cerrar</span>
             </RadixDialog.Close>
@@ -85,7 +100,7 @@ const DialogHeader = ({
     <div
       data-slot="dialog-header"
       className={cn(
-        "border-secondary/25 flex shrink-0 flex-col gap-2 px-6 py-5 text-center sm:px-7 sm:text-left",
+        "flex shrink-0 flex-col gap-2 px-6 py-5 text-center sm:px-7 sm:text-left",
         className,
       )}
     >
@@ -110,7 +125,7 @@ const DialogDescription = ({
 }: WithChildren & WithClassName) => {
   return (
     <RadixDialog.Description
-      className={cn("text-base-content/65 text-sm", className)}
+      className={cn("text-base-content/70 text-sm", className)}
     >
       {children}
     </RadixDialog.Description>
@@ -137,7 +152,7 @@ const DialogFooter = ({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "border-secondary/25 w-full shrink-0 border-t px-6 py-4 sm:px-7",
+        "border-base-300 w-full shrink-0 border-t px-6 py-4 sm:px-7",
         className,
       )}
     >

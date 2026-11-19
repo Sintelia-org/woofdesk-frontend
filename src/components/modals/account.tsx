@@ -52,9 +52,7 @@ export function ChangePasswordModal({
       },
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: ["session"] });
-        toast.success(
-          "Contraseña actualizada. Se cerraron las otras sesiones.",
-        );
+        toast.success("Contraseña cambiada. Se cerraron las otras sesiones.");
         onClose();
       },
     },
@@ -68,6 +66,7 @@ export function ChangePasswordModal({
       footer={
         <FormActions
           form="account-password-form"
+          label="Cambiar contraseña"
           pending={mutation.isPending}
           error={mutation.error}
           onClose={onClose}
@@ -155,7 +154,7 @@ export function LogoutAllModal({
       data={undefined}
       title="Cerrar todas las sesiones"
       description="Cerrar las sesiones en todos tus dispositivos"
-      buttonText="Cerrar todas"
+      buttonText="Cerrar todas las sesiones"
       type="warning"
     >
       Se cerrará también la sesión de este dispositivo. Vas a necesitar volver a

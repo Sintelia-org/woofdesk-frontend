@@ -3,8 +3,9 @@ import { useEffect, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "@/features/session/session.client";
 import { LoadingScreen } from "@/components/loading";
-import { ErrorInformer } from "@/components/error";
-import { getErrorMessage } from "@/lib/query";
+import { ErrorState } from "@/components/error";
+// Guards the view area only: the layout renders the navigation outside it, so
+// a failed /me (network, server or schema error) keeps the shell usable.
 export function SessionGuard({ children }: { children: ReactNode }) {
   const session = useSession();
   const router = useRouter();
@@ -18,9 +19,9 @@ export function SessionGuard({ children }: { children: ReactNode }) {
   if (session.isPending || unauthorized) return <LoadingScreen />;
   if (session.isError)
     return (
-      <div className="p-6">
-        <ErrorInformer
-          message={getErrorMessage(session.error)}
+      <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <ErrorState
+          error={session.error}
           retry={() => {
             void session.refetch();
           }}

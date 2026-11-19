@@ -1,5 +1,5 @@
 "use client";
-import { DatePickerPopover } from "@/components/date";
+import { MonthlyDatePicker } from "@/components/date";
 import { SelectInput } from "@/components/select-input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays } from "date-fns";
@@ -36,7 +36,8 @@ import {
   AppearItem,
   AppearList,
 } from "@/components/appear";
-import { ErrorInformer } from "@/components/error";
+import { ErrorInformer, ErrorState } from "@/components/error";
+import { HangingSign } from "@/components/hanging-sign";
 import { LoadingSpinner } from "@/components/loading";
 import { CardsSkeleton } from "@/components/skeletons";
 import {
@@ -405,7 +406,8 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
           <>
             <label className="text-base-content/70 flex items-center gap-2 text-xs">
               Desde
-              <InputDate
+              <MonthlyDatePicker
+                className="h-8 w-52 bg-white text-xs"
                 value={range.from}
                 onChange={(from) => {
                   setRange({ ...range, from });
@@ -415,7 +417,8 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
             </label>
             <label className="text-base-content/70 flex items-center gap-2 text-xs">
               Hasta
-              <InputDate
+              <MonthlyDatePicker
+                className="h-8 w-52 bg-white text-xs"
                 value={range.to}
                 onChange={(to) => {
                   setRange({ ...range, to });
@@ -458,7 +461,7 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
         />
       </SearchToolbar>
       {!showCalendar ? (
-        <p className="text-base-content/70 shrink-0 text-xs">
+        <p className="text-base-content/70 shrink-0 text-xs font-medium">
           El rango se interpreta en la zona horaria de la peluquería (máximo 62
           días). Las horas se muestran en este dispositivo.
         </p>
@@ -485,8 +488,8 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
             loading={appointmentsQuery.isPending}
             error={
               appointmentsQuery.isError ? (
-                <ErrorInformer
-                  message={getErrorMessage(appointmentsQuery.error)}
+                <ErrorState
+                  error={appointmentsQuery.error}
                   retry={() => {
                     void appointmentsQuery.refetch();
                   }}
@@ -511,6 +514,7 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
             itemLabel="turnos"
             columns={columns}
             searchInput={filter}
+            emptySign="Sin turnos"
             data={records.slice((page - 1) * limit, page * limit)}
             loading={appointmentsQuery.isPending}
             error={appointmentsQuery.error}
@@ -534,8 +538,8 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
           className="min-h-0 flex-1 overflow-hidden xl:grid-cols-2"
         />
       ) : appointmentsQuery.isError ? (
-        <ErrorInformer
-          message={getErrorMessage(appointmentsQuery.error)}
+        <ErrorState
+          error={appointmentsQuery.error}
           retry={() => {
             void appointmentsQuery.refetch();
           }}
@@ -559,7 +563,7 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-primary-ink font-mono-ui mb-1 text-xs">
+                        <p className="text-primary-ink mb-1 text-xs font-semibold tabular-nums">
                           {new Date(item.datetime).toLocaleTimeString("es-AR", {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -581,7 +585,7 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
                       </span>
                     </div>
                     <p className="text-base-content/70 text-sm">
-                      {item.services.join(" · ")}
+                      {item.services.join(", ")}
                     </p>
                     {item.maintenance ? (
                       <span className="text-success text-xs">
@@ -608,14 +612,25 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
           ))}
         </AppearList>
       ) : (
-        <div className="bg-base-100 border-base-300 rounded-box border p-10 text-center">
-          <CalendarDaysIcon className="text-primary/60 mx-auto mb-3 size-10" />
-          <h2 className="font-bold">
-            Una agenda con espacio para nuevas visitas
-          </h2>
-          <p className="text-base-content/70 mt-2 text-sm">
-            No hay turnos que coincidan con los filtros.
+        <div className="bg-base-100 border-base-300 rounded-box flex flex-col items-center gap-3 border p-10 text-center">
+          <HangingSign label="Agenda libre" />
+          <h2 className="mt-2 font-bold">No hay turnos para estos filtros</h2>
+          <p className="text-base-content/70 text-sm">
+            Ampliá el rango de fechas o cambiá los filtros
+            {canWrite ? ", o agendá un turno nuevo." : "."}
           </p>
+          {canWrite ? (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm mt-1"
+              onClick={() => {
+                setCreateDatetime(undefined);
+                setIsCreateModalOpen(true);
+              }}
+            >
+              Agregar turno
+            </button>
+          ) : null}
         </div>
       )}
       {isCreateModalOpen ? (
@@ -669,21 +684,5 @@ export function AppointmentsPage({ view }: { view: "table" | "agenda" }) {
         />
       ) : null}
     </AppearGroup>
-  );
-}
-function InputDate({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <DatePickerPopover
-      value={value}
-      onChange={onChange}
-      allowClear={false}
-      className="h-8 w-36 text-xs"
-    />
   );
 }
